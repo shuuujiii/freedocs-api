@@ -1,10 +1,10 @@
 require('dotenv').config()
 
-var express = require('express')
-var app = express()
-var cors = require('cors');
-var logger = require('morgan')
-
+const express = require('express')
+let app = express()
+const cors = require('cors');
+const logger = require('morgan')
+const mongoose = require('mongoose')
 const fs = require('fs')
 const join = require('path').join
 
@@ -38,9 +38,11 @@ if (environment !== 'production') {
 
 var router = require('./routes/v1/');
 app.use('/api/v1/', router);
-const mongoose = require('mongoose')
-
-mongoose.connect(process.env.MONGODB_URI,
+// app.get('/aaa', function (req, res) {
+//   res.status(200).json({ name: 'john' });
+// });
+// console.log('aaaaaaaaa')
+mongoose.connect(stage.dbUri,
   {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -49,6 +51,20 @@ mongoose.connect(process.env.MONGODB_URI,
 )
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'MongoDB connection error:'))
-db.once('open', () => console.log('MongoDB connection successful'))
-app.listen(`${stage.port}`)
-console.log('listen on port ' + `${stage.port}`)
+db.once('open', () => console.log('MongoDB connection successful', environment))
+//app.listen(`${stage.port}`)
+app.use(function (req, res, next) {
+  next(createError(404));
+});
+app.use(function (err, req, res, next) {
+  // set locals, only providing error in development
+  res.locals.message = err.message;
+  res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+  // render the error page
+  res.status(err.status || 500);
+  res.render('error');
+});
+//app.listen(stage.port)
+module.exports = app;
+// console.log('listen on port ' + `${stage.port}`)
