@@ -12,6 +12,10 @@ var UserSchema = new mongoose.Schema(
             type: 'String',
             required: true,
             trim: true
+        },
+        admin: {
+            type: Boolean,
+            default: false,
         }
     }, {
     timestamps: false
