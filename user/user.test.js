@@ -4,7 +4,7 @@ let should = chai.should();
 const app = require('../app.js')
 const { StatusCodes } = require('http-status-codes');
 
-const User = require('../models/userModel')
+const User = require('./userModel')
 const bc = require('../utils/bcrypto')
 chai.use(chaiHttp);
 beforeEach(async () => { //Before each test we empty the database

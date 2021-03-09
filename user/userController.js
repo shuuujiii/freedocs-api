@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 const validateToken = require('../utils/jwtvalidation').validateToken;
-const User = mongoose.model('User')
-const UserValidator = require('../validation/userValidator')
+const User = require('./userModel')
+const UserValidator = require('./userValidator')
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const { AppError } = require('../appError')

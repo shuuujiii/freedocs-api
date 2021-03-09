@@ -5,16 +5,9 @@ const app = express()
 const cors = require('cors');
 const logger = require('morgan')
 const mongoose = require('mongoose')
-const fs = require('fs')
-const join = require('path').join
 const errorHandler = require('./errorhandler').handler
-const models = join(__dirname, 'models')
 const environment = process.env.NODE_ENV;
 const stage = require('./config')[environment];
-
-fs.readdirSync(models)
-  .filter(file => ~file.search(/^[^.].*\.js$/))
-  .forEach(file => require(join(models, file)))
 
 let whitelist = process.env.WHITE_LIST.split(' ')
 app.use(cors({
@@ -31,13 +24,16 @@ app.use(cors({
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
+// api logger
 if (environment !== 'production') {
   app.use(logger('dev'));
 }
 
+// router
 let router = require('./routes/v1/');
 app.use('/api/v1/', router);
 
+// db connection
 mongoose.connect(stage.dbUri,
   {
     useNewUrlParser: true,
