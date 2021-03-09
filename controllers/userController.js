@@ -2,34 +2,41 @@ const mongoose = require('mongoose')
 const validateToken = require('../utils/jwtvalidation').validateToken;
 const User = mongoose.model('User')
 const bcrypt = require('bcrypt');
-const { StatusCodes } = require('http-status-codes');
+const { StatusCodes, getReasonPhrase } = require('http-status-codes');
+const { AppError } = require('../appError')
 const environment = process.env.NODE_ENV;
 const stage = require('../config.js')[environment];
 module.exports = {
-    create: async (req, res) => {
-        const { username, password } = req.body
-        const findUser = await User.findOne({ username: username }).lean()
-        if (findUser) {
-            res.status(StatusCodes.CONFLICT)
-                .json('user already exists')
-        } else {
-            const user = await User.create({
-                username: username,
-                password: bcrypt.hashSync(password, stage.saltingRounds),
-            })
-            res.status(StatusCodes.CREATED)
-                .json(user)
+    create: async (req, res, next) => {
+        try {
+            const { username, password } = req.body
+            const findUser = await User.findOne({ username: username }).lean()
+            if (findUser) {
+                throw new AppError(getReasonPhrase(StatusCodes.CONFLICT), StatusCodes.CONFLICT, 'user already exists', true)
+            } else {
+                const user = await User.create({
+                    username: username,
+                    password: bcrypt.hashSync(password, stage.saltingRounds),
+                })
+                res.status(StatusCodes.CREATED)
+                    .json(user)
+            }
+        } catch (e) {
+            next(e)
         }
     },
-    read: async (req, res) => {
-        const user = await User.findOne({
-            'username': req.query.username
-        })
-        console.log('judgement', user === null)
-        if (user === null) {
-            res.status(StatusCodes.NOT_FOUND).json({ message: 'user not found' })
-        } else {
-            res.json(user)
+    read: async (req, res, next) => {
+        try {
+            const user = await User.findOne({
+                'username': req.query.username
+            })
+            if (user === null) {
+                throw new AppError(getReasonPhrase(StatusCodes.NOT_FOUND), StatusCodes.NOT_FOUND, 'user not found', true)
+            } else {
+                res.json(user)
+            }
+        } catch (e) {
+            next(e)
         }
     },
     update: async (req, res) => {

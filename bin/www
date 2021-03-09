@@ -4,17 +4,31 @@
  * Module dependencies.
  */
 
-var app = require('../app');
-var debug = require('debug')('express-generator:server');
-var http = require('http');
+const app = require('../app');
+const debug = require('debug')('appFreeDocs')
+const http = require('http');
+const environment = process.env.NODE_ENV; // development
+const stage = require('../config')[environment];
+const errorHandler = require('../errorhandler').handler
+
+process.on('uncaughtException', err => {
+  console.error('There was an uncaught error', err)
+  //   errorHandler.handleError(error);
+  process.exit(1) //mandatory (as per the Node.js docs)
+})
+
+process.on("unhandledRejection", (reason) => {
+  console.log('there was an unhandledRejection error', reason)
+  errorHandler.handleError(reason);
+  process.exit(1)
+});
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '3000');
-app.set('port', port);
-console.log(port)
+app.set('port', normalizePort(stage.port || '3000'));
+// console.log(port)
 /**
  * Create HTTP server.
  */
@@ -25,9 +39,10 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(normalizePort(stage.port || '3000'));
 server.on('error', onError);
 server.on('listening', onListening);
+
 
 /**
  * Normalize a port into a number, string, or false.
