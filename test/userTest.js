@@ -9,7 +9,7 @@ const bc = require('../utils/bcrypto')
 chai.use(chaiHttp);
 beforeEach(async () => { //Before each test we empty the database
     await User.deleteMany({})
-    await User.create({ username: 'nabe', password: bc.hashPassword('abcd') })
+    await User.create({ username: 'nabe', password: bc.hashPassword('abcdefgh') })
     // User.deleteMany({}, (err) => {
     //     // done();
     // });
@@ -21,7 +21,7 @@ describe('Create User', () => {
     it('should create user', (done) => {
         chai.request(app)
             .put('/api/v1/users')
-            .send({ username: 'nabeshi', password: "aaaa" })
+            .send({ username: 'nabeshi', password: "abcdefgh" })
             .end((err, res) => {
                 res.should.have.status(StatusCodes.CREATED)
                 res.body.username.should.to.eql('nabeshi')
@@ -31,9 +31,27 @@ describe('Create User', () => {
     it('it should not create duplicate user', (done) => {
         chai.request(app)
             .put('/api/v1/users')
-            .send({ username: 'nabe', password: "aaaa" })
+            .send({ username: 'nabe', password: "abcdefghi" })
             .end((err, res) => {
                 res.should.have.status(StatusCodes.CONFLICT)
+                done();
+            })
+    });
+    it('it should not create username with space', (done) => {
+        chai.request(app)
+            .put('/api/v1/users')
+            .send({ username: 'na be', password: "abcdefghi" })
+            .end((err, res) => {
+                res.should.have.status(StatusCodes.BAD_REQUEST)
+                done();
+            })
+    });
+    it('it should not create user with number password', (done) => {
+        chai.request(app)
+            .put('/api/v1/users')
+            .send({ username: 'nabeshi', password: 12345678 })
+            .end((err, res) => {
+                res.should.have.status(StatusCodes.BAD_REQUEST)
                 done();
             })
     });
