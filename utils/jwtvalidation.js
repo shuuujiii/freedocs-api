@@ -1,33 +1,27 @@
 const jwt = require('jsonwebtoken');
-
+const { AppError } = require('../appError')
+const { StatusCodes, getReasonPhrase } = require('http-status-codes')
 module.exports = {
     validateToken: (req, res, next) => {
-        const authorizationHeaader = req.headers.authorization;
-        let result;
-        if (authorizationHeaader) {
+        try {
+            const authorizationHeader = req.headers.authorization;
+            if (!authorizationHeader) {
+                throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'Token required', true)
+            }
+
             const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
             const options = {
                 expiresIn: '2d',
-                issuer: 'https://scotch.io'
+                issuer: 'shuji watanabe'
             };
-            try {
-                // verify makes sure that the token hasn't expired and has been issued by us
-                result = jwt.verify(token, process.env.JWT_SECRET, options);
-
-                // Let's pass back the decoded token to the request object
-                req.decoded = result;
-                // We call next to pass execution to the subsequent middleware
-                next();
-            } catch (err) {
-                // Throw an error just in case anything goes wrong with verification
-                throw new Error(err);
-            }
-        } else {
-            result = {
-                error: `Authentication error. Token required.`,
-                status: 401
-            };
-            res.status(401).send(result);
+            // verify makes sure that the token hasn't expired and has been issued by us
+            user = jwt.verify(token, process.env.JWT_SECRET, options);
+            // Let's pass back the decoded token to the request object
+            req.user = user;
+            // We call next to pass execution to the subsequent middleware
+            next();
+        } catch (e) {
+            next(e)
         }
     }
 };

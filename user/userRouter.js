@@ -1,13 +1,15 @@
 
 var express = require('express')
 var router = express.Router()
-const checktoken = require('../utils/jwtvalidation').validateToken;
+const { validateToken } = require('../utils/jwtvalidation');
 const userController = require('./userController')
 
+// login
+router.get('/login', userController.login)
 // create
 router.put('/', userController.create)
 //read
-router.get('/', userController.read)
+router.get('/', validateToken, userController.read)
 //update
 router.post('/', userController.update)
 //delete
