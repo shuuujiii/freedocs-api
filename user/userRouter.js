@@ -5,13 +5,13 @@ const { validateToken } = require('../utils/jwtvalidation');
 const userController = require('./userController')
 
 // login
-router.get('/login', userController.login)
+router.post('/login', userController.login)
 // create
-router.put('/', userController.create)
+router.post('/', userController.create)
 //read
 router.get('/', validateToken, userController.read)
 //update
-router.post('/', userController.update)
+router.put('/', userController.update)
 //delete
 router.delete('/', userController.delete)
 

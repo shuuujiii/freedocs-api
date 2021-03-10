@@ -15,9 +15,9 @@ module.exports = {
                 issuer: 'shuji watanabe'
             };
             // verify makes sure that the token hasn't expired and has been issued by us
-            user = jwt.verify(token, process.env.JWT_SECRET, options);
+            const decoded = jwt.verify(token, process.env.JWT_SECRET, options);
             // Let's pass back the decoded token to the request object
-            req.user = user;
+            req.decoded = decoded;
             // We call next to pass execution to the subsequent middleware
             next();
         } catch (e) {
