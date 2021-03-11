@@ -1,8 +1,8 @@
 
 var express = require('express')
 var router = express.Router()
-const { validateToken } = require('../utils/jwtvalidation');
-const userController = require('./userController')
+const { validateToken } = require('../../middlewares/validator/jwtvalidation');
+const userController = require('../../controllers/userController')
 
 // login
 router.post('/login', userController.login)

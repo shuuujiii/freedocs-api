@@ -1,5 +1,5 @@
-const Article = require('./articleModel')
-const User = require('../user/userModel')
+const Article = require('../models/articleModel')
+const User = require('../models/userModel')
 // const ArticleValidator = require('./articleValidator')
 // const { AppError } = require('../appError')
 // const { StatusCodes } = require('http-status-codes')

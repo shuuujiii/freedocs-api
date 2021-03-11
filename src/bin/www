@@ -8,8 +8,8 @@ const app = require('../app');
 const debug = require('debug')('appFreeDocs')
 const http = require('http');
 const environment = process.env.NODE_ENV; // development
-const stage = require('../config')[environment];
-const errorHandler = require('../errorhandler').handler
+const stage = require('../configs/config')[environment];
+const errorHandler = require('../utils/errorhandler').handler
 
 process.on('uncaughtException', err => {
   console.error('There was an uncaught error', err)

@@ -1,8 +1,8 @@
 const express = require('express')
 const router = express.Router()
 
-const userRouter = require('../../user/userRouter')
-const articleRouter = require('../../article/articleRouter')
+const userRouter = require('./userRouter')
+const articleRouter = require('./articleRouter')
 
 router.use('/users', userRouter)
 router.use('/article', articleRouter)

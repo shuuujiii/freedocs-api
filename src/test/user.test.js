@@ -3,7 +3,7 @@ let chaiHttp = require('chai-http');
 let should = chai.should();
 const app = require('../app.js')
 const { StatusCodes } = require('http-status-codes');
-const User = require('./userModel')
+const User = require('../models/userModel')
 const bc = require('../utils/bcrypto');
 const defaultUser = { username: 'nabe', password: 'abcdefgh' }
 chai.use(chaiHttp);

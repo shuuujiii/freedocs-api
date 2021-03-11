@@ -1,10 +1,10 @@
 const express = require('express')
 const router = express.Router()
 const { StatusCodes } = require('http-status-codes')
-const { validateToken } = require('../utils/jwtvalidation')
-const ArticleValidator = require('./articleValidator')
-const articleController = require('./articleController')
-const { AppError } = require('../appError')
+const { validateToken } = require('../../middlewares/validator/jwtvalidation')
+const ArticleValidator = require('../../middlewares/validator/articleValidator')
+const articleController = require('../../controllers/articleController')
+const { AppError } = require('../../utils/appError')
 
 const validateParam = async (req, res, next) => {
     try {

@@ -3,9 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "start": "node ./bin/www",
-    "dev": "cross-env NODE_ENV=development DEBUG=appFreeDocs nodemon ./bin/www",
-    "test": "cross-env NODE_ENV=test mocha **/*.test.js --timeout 10000",
+    "start": "node ./src/bin/www",
+    "dev": "cross-env NODE_ENV=development DEBUG=appFreeDocs nodemon ./src/bin/www",
+    "test": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
     "testsingle": "cross-env NODE_ENV=test mocha --timeout 10000"
   },
   "dependencies": {

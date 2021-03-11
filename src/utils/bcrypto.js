@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt');
 
 const environment = process.env.NODE_ENV;
-const stage = require('../config.js')[environment];
+const stage = require('../configs/config.js')[environment];
 
 module.exports = {
     hashPassword: function (password) {

@@ -1,10 +1,10 @@
-const User = require('./userModel')
-const UserValidator = require('./userValidator')
+const User = require('../models/userModel')
+const UserValidator = require('../middlewares/validator/userValidator')
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
-const { AppError } = require('../appError')
+const { AppError } = require('../utils/appError')
 const environment = process.env.NODE_ENV;
-const stage = require('../config.js')[environment];
+const stage = require('../configs/config.js')[environment];
 const jwt = require('jsonwebtoken')
 
 module.exports = {

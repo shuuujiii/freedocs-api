@@ -5,8 +5,8 @@ const app = require('../app.js')
 const { StatusCodes } = require('http-status-codes');
 const defaultUser = { username: 'nabe', password: 'abcdefgh' }
 const bc = require('../utils/bcrypto');
-const User = require('../user/userModel')
-const Article = require('./articleModel')
+const User = require('../models/userModel')
+const Article = require('../models/articleModel')
 chai.use(chaiHttp);
 
 let token;

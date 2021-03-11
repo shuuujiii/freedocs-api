@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { AppError } = require('../appError')
+const { AppError } = require('../../utils/appError')
 const { StatusCodes, getReasonPhrase } = require('http-status-codes')
 module.exports = {
     validateToken: (req, res, next) => {

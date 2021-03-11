@@ -5,9 +5,9 @@ const app = express()
 const cors = require('cors');
 const logger = require('morgan')
 const mongoose = require('mongoose')
-const errorHandler = require('./errorhandler').handler
+const errorHandler = require('./utils/errorhandler').handler
 const environment = process.env.NODE_ENV;
-const stage = require('./config')[environment];
+const stage = require('./configs/config')[environment];
 
 let whitelist = process.env.WHITE_LIST.split(' ')
 app.use(cors({
