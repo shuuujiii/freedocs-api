@@ -22,7 +22,6 @@ describe('article api', () => {
             .post("/api/v1/users/login")
             .send(defaultUser)
             .end((err, res) => {
-                // if (err) { console.log('login error') }
                 token = res.body.token;
                 res.should.have.status(200);
                 done();
@@ -35,7 +34,6 @@ describe('article api', () => {
                 .send({ title: 'some title', url: "https://google.com" })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
-                    console.log('response is', res)
                     res.should.have.status(StatusCodes.OK);
                     res.body.title.should.to.eql('some title')
                     res.body.url.should.to.eql('https://google.com')

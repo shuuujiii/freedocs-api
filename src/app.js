@@ -25,7 +25,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
 
 // api logger
-if (environment !== 'production') {
+if (environment === 'development') {
   app.use(logger('dev'));
 }
 

@@ -88,7 +88,6 @@ describe('Authenticated', () => {
             .post("/api/v1/users/login")
             .send(defaultUser)
             .end((err, res) => {
-                // if (err) { console.log('login error') }
                 token = res.body.token;
                 res.should.have.status(200);
                 done();
@@ -101,7 +100,6 @@ describe('Authenticated', () => {
                 .query({ username: defaultUser.username })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
-                    if (err) { console.log(err) }
                     res.should.have.status(StatusCodes.OK);
                     res.body.username.should.to.eql('nabe')
                     done();

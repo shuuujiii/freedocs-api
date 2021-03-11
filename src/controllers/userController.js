@@ -11,7 +11,6 @@ module.exports = {
     create: async (req, res, next) => {
         try {
             const { username, password } = req.body
-            console.log(username, password)
             // validate parameter
             await UserValidator.validateAsync({ username: username, password: password })
                 .catch(err => {
@@ -21,7 +20,7 @@ module.exports = {
             // check duplicate
             const findUser = await User.findOne({ username: username }).lean()
             if (findUser) {
-                throw new AppError(getReasonPhrase(StatusCodes.CONFLICT), StatusCodes.CONFLICT, 'user already exists', true)
+                throw new AppError('AppError', StatusCodes.CONFLICT, 'user already exists', true)
             }
 
             // create user
@@ -39,7 +38,7 @@ module.exports = {
         try {
             // check authenticate user
             if (req.decoded.username !== req.query.username) {
-                throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'not authorized', true)
+                throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'not authorized', true)
             }
 
             // find user
@@ -49,7 +48,7 @@ module.exports = {
 
             // check user exist
             if (user === null) {
-                throw new AppError(getReasonPhrase(StatusCodes.NOT_FOUND), StatusCodes.NOT_FOUND, 'user not found', true)
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user not found', true)
             }
 
             // response
@@ -81,12 +80,12 @@ module.exports = {
             // find user
             const user = await User.findOne({ username: username })
                 .catch(err => {
-                    throw new AppError('internal server error', StatusCodes.INTERNAL_SERVER_ERROR, 'internal server error', true)
+                    throw new AppError('AppError', StatusCodes.INTERNAL_SERVER_ERROR, 'internal server error', true)
                 })
 
             // is exist user
             if (user === null) {
-                throw new AppError('not found', StatusCodes.NOT_FOUND, 'user is not found', true)
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
             }
 
             // compare password

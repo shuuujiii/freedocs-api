@@ -41,7 +41,6 @@ describe('tag api', () => {
             .post("/api/v1/users/login")
             .send(defaultUser)
             .end((err, res) => {
-                // if (err) { console.log('login error') }
                 token = res.body.token;
                 res.should.have.status(StatusCodes.OK);
                 done();
@@ -54,7 +53,6 @@ describe('tag api', () => {
             .post("/api/v1/users/login")
             .send(anotherUser)
             .end((err, res) => {
-                // if (err) { console.log('login error') }
                 anothertoken = res.body.token;
                 res.should.have.status(StatusCodes.OK);
                 done();
