@@ -10,6 +10,10 @@ let ArticleSchema = new mongoose.Schema(
             type: String,
             require: true
         },
+        tags: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Tag'
+        }],
         user: {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',

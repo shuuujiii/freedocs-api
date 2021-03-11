@@ -1,7 +1,7 @@
 
 var express = require('express')
 var router = express.Router()
-const { validateToken } = require('../../middlewares/validator/jwtvalidation');
+const { validateToken } = require('../../middlewares/validator/jwtvalidator');
 const userController = require('../../controllers/userController')
 
 // login

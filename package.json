@@ -5,8 +5,8 @@
   "scripts": {
     "start": "node ./src/bin/www",
     "dev": "cross-env NODE_ENV=development DEBUG=appFreeDocs nodemon ./src/bin/www",
-    "test": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
-    "testsingle": "cross-env NODE_ENV=test mocha --timeout 10000"
+    "alltest": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
+    "test": "cross-env NODE_ENV=test mocha --timeout 10000"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",

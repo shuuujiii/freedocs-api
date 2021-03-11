@@ -1,7 +1,7 @@
 const express = require('express')
 const router = express.Router()
 const { StatusCodes } = require('http-status-codes')
-const { validateToken } = require('../../middlewares/validator/jwtvalidation')
+const { validateToken } = require('../../middlewares/validator/jwtvalidator')
 const ArticleValidator = require('../../middlewares/validator/articleValidator')
 const articleController = require('../../controllers/articleController')
 const { AppError } = require('../../utils/appError')

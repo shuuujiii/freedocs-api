@@ -11,11 +11,11 @@ module.exports = {
     create: async (req, res, next) => {
         try {
             const { username, password } = req.body
-
+            console.log(username, password)
             // validate parameter
             await UserValidator.validateAsync({ username: username, password: password })
                 .catch(err => {
-                    throw new AppError('validation error', StatusCodes.BAD_REQUEST, err.message, true)
+                    throw new AppError(err.name, StatusCodes.BAD_REQUEST, err.message, true)
                 });
 
             // check duplicate
