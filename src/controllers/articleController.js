@@ -1,16 +1,16 @@
 const Article = require('../models/articleModel')
 const User = require('../models/userModel')
-// const ArticleValidator = require('./articleValidator')
-// const { AppError } = require('../appError')
-// const { StatusCodes } = require('http-status-codes')
 
 module.exports = {
     create: async (req, res, next) => {
         try {
+            const { title, url, tags } = req.body
+            const tag_ids = tags.map(tag => tag._id)
             const user = await User.findById(req.decoded.user_id)
             const article = await Article.create({
-                title: req.body.title,
-                url: req.body.url,
+                title: title,
+                url: url,
+                tags: tag_ids,
                 user: user._id,
             })
             res.json(article)
@@ -23,7 +23,7 @@ module.exports = {
             const user = await User.findById(req.decoded.user_id)
             const articles = await Article.find({
                 user: user._id
-            })
+            }).populate('tags')
             res.json(articles)
         } catch (e) {
             next(e)
@@ -31,7 +31,8 @@ module.exports = {
     },
     update: async (req, res, next) => {
         try {
-            const { _id, title, url } = req.body
+            const { _id, title, url, tags } = req.body
+            const tag_ids = tags.map(tag => tag._id)
             const user = await User.findById(req.decoded.user_id)
             const article = await Article.findOneAndUpdate({
                 _id: _id,
@@ -39,6 +40,7 @@ module.exports = {
             }, {
                 title: title,
                 url: url,
+                tags: tag_ids
             }, {
                 new: true,
             })
@@ -55,6 +57,51 @@ module.exports = {
                 _id: _id,
                 user: user._id
             })
+            res.json(article)
+        } catch (e) {
+            next(e)
+        }
+    },
+    addTags: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user_id)
+            const { _id, tags } = req.body
+            const tag_ids = tags.map(tag => tag._id)
+            const article = await Article.findOneAndUpdate(
+                { _id: _id, user: user._id },
+                { $addToSet: { tags: tag_ids } },
+                { new: true })
+            res.json(article)
+
+        } catch (e) {
+            next(e)
+        }
+    },
+    deleteTags: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user_id)
+            const { _id, tags } = req.body
+            const tag_ids = tags.map(tag => tag._id)
+            const article = await Article.findOneAndUpdate(
+                { _id: _id, user: user._id },
+                { $pullAll: { tags: tag_ids } },
+                { new: true }
+            )
+            res.json(article)
+        } catch (e) {
+            next(e)
+        }
+    },
+    updateTag: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user_id)
+            const { _id, tags } = req.body
+            const tag_ids = tags.map(tag => tag._id)
+            const article = await Article.findOneAndUpdate(
+                { _id: _id, user: user._id },
+                { tags: tag_ids },
+                { new: true }
+            )
             res.json(article)
         } catch (e) {
             next(e)

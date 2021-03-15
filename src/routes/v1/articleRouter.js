@@ -8,7 +8,7 @@ const { AppError } = require('../../utils/appError')
 
 const validateParam = async (req, res, next) => {
     try {
-        const { title, url } = req.body
+        const { title, url, tags } = req.body
         const user_id = req.decoded.user_id
         await ArticleValidator.validateAsync({ title: title, url: url, user: user_id })
             .catch(err => {
@@ -26,5 +26,11 @@ router.get('/', validateToken, articleController.read)
 router.put('/', validateToken, validateParam, articleController.update)
 
 router.delete('/', validateToken, articleController.delete)
+
+router.post('/tag', validateToken, articleController.addTags)
+
+router.delete('/tag', validateToken, articleController.deleteTags)
+
+router.put('/tag', validateToken, articleController.updateTag)
 
 module.exports = router
