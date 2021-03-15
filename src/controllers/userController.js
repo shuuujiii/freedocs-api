@@ -37,7 +37,7 @@ module.exports = {
     read: async (req, res, next) => {
         try {
             // check authenticate user
-            if (req.decoded.username !== req.query.username) {
+            if (req.decoded.user.username !== req.query.username) {
                 throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'not authorized', true)
             }
 
@@ -96,8 +96,7 @@ module.exports = {
 
             // authenticated
             const payload = {
-                user_id: user._id,
-                username: user.username,
+                user: user
             }
             const options = {
                 expiresIn: '2d',

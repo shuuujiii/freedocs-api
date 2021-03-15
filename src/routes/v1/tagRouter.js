@@ -2,14 +2,13 @@ const express = require('express')
 const router = express.Router()
 const tagController = require('../../controllers/tagController')
 const { validateToken } = require('../../middlewares/validator/jwtvalidator')
-const tagValidator = require('../../middlewares/validator/tagValidator')
+const TagValidator = require('../../middlewares/validator/tagValidator')
 const { AppError } = require('../../utils/appError')
 const { StatusCodes } = require('http-status-codes')
 const validateParam = async (req, res, next) => {
     try {
-        const { user_id } = req.decoded
         const { name } = req.body
-        await tagValidator.checkAllKeys.validateAsync({ name: name, user: user_id })
+        await TagValidator.validateAsync({ name: name })
             .catch(e => {
                 throw new AppError(e.name, StatusCodes.BAD_REQUEST, e.message, true)
             })
@@ -21,9 +20,8 @@ const validateParam = async (req, res, next) => {
 
 const validateDeleteParam = async (req, res, next) => {
     try {
-        const { user_id } = req.decoded
         const { _id } = req.body
-        await tagValidator.checkId.validateAsync({ _id: _id, user: user_id })
+        await TagValidator.validateAsync({ _id: _id })
             .catch(e => {
                 throw new AppError(e.name, StatusCodes.BAD_REQUEST, e.message, true)
             })
@@ -32,9 +30,21 @@ const validateDeleteParam = async (req, res, next) => {
         next(e)
     }
 }
+
+const validateAdminUser = async (req, res, next) => {
+    try {
+        const { admin } = req.decoded.user
+        if (!admin) {
+            throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'only admin user can do that', true)
+        }
+        next()
+    } catch (e) {
+        next(e)
+    }
+}
 router.post('/', validateToken, validateParam, tagController.create)
 router.get('/', validateToken, tagController.read)
-router.put('/', validateToken, validateParam, tagController.update)
-router.delete('/', validateToken, validateDeleteParam, tagController.delete)
+router.put('/', validateToken, validateAdminUser, validateParam, tagController.update)
+router.delete('/', validateToken, validateAdminUser, validateDeleteParam, tagController.delete)
 
 module.exports = router

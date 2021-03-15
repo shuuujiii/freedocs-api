@@ -4,14 +4,13 @@ const { StatusCodes } = require('http-status-codes')
 module.exports = {
     create: async (req, res, next) => {
         try {
-            const { user_id } = req.decoded
             const { name } = req.body
             const isExistTag = await Tag.findOne({ name: name })
             console.log(isExistTag)
             if (isExistTag) {
                 throw new AppError('AppError', StatusCodes.CONFLICT, 'already exist the tag name', true)
             }
-            const tag = await Tag.create({ name: name, user: user_id })
+            const tag = await Tag.create({ name: name })
             res.status(StatusCodes.CREATED).json(tag)
         } catch (e) {
             next(e)
@@ -21,7 +20,7 @@ module.exports = {
     read: async (req, res, next) => {
         try {
             const { user_id } = req.decoded
-            const tags = await Tag.find({ user: user_id })
+            const tags = await Tag.find({})
             res.status(StatusCodes.OK).json(tags)
         } catch (e) {
             next(e)
@@ -29,11 +28,10 @@ module.exports = {
     },
     update: async (req, res, next) => {
         try {
-            const { user_id } = req.decoded
+            // const { user_id } = req.decoded
             const { _id, name } = req.body
             const tags = await Tag.findOneAndUpdate({
                 _id: _id,
-                user: user_id
             }, {
                 name: name
             }, {
@@ -46,9 +44,9 @@ module.exports = {
     },
     delete: async (req, res, next) => {
         try {
-            const { user_id } = req.decoded
+            // const { user_id } = req.decoded
             const { _id } = req.body
-            const tag = await Tag.deleteOne({ _id: _id, user: user_id })
+            const tag = await Tag.deleteOne({ _id: _id })
             res.json(tag)
         } catch (e) {
             next(e)

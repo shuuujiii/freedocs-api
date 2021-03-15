@@ -1,26 +1,28 @@
+const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
 const User = require('../models/userModel')
+const { AppError } = require('../utils/appError')
 
 module.exports = {
     create: async (req, res, next) => {
         try {
             const { title, url, tags } = req.body
-            const tag_ids = tags.map(tag => tag._id)
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const article = await Article.create({
                 title: title,
                 url: url,
-                tags: tag_ids,
+                tags: tags,
                 user: user._id,
             })
-            res.json(article)
+            const populated = await Article.findById(article._id).populate('tags')
+            res.json(populated)
         } catch (e) {
             next(e)
         }
     },
     read: async (req, res, next) => {
         try {
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const articles = await Article.find({
                 user: user._id
             }).populate('tags')
@@ -32,19 +34,23 @@ module.exports = {
     update: async (req, res, next) => {
         try {
             const { _id, title, url, tags } = req.body
-            const tag_ids = tags.map(tag => tag._id)
-            const user = await User.findById(req.decoded.user_id)
+            // const tag_ids = tags.map(tag => tag._id)
+            const user = await User.findById(req.decoded.user._id)
             const article = await Article.findOneAndUpdate({
                 _id: _id,
                 user: user._id
             }, {
                 title: title,
                 url: url,
-                tags: tag_ids
+                tags: tags
             }, {
                 new: true,
             })
-            res.json(article)
+            if (!article) {
+                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
+            }
+            const populated = await Article.findById(article._id).populate('tags')
+            res.json(populated)
         } catch (e) {
             next(e)
         }
@@ -52,7 +58,7 @@ module.exports = {
     delete: async (req, res, next) => {
         try {
             const { _id } = req.body
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const article = await Article.deleteOne({
                 _id: _id,
                 user: user._id
@@ -64,7 +70,7 @@ module.exports = {
     },
     addTags: async (req, res, next) => {
         try {
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const { _id, tags } = req.body
             const tag_ids = tags.map(tag => tag._id)
             const article = await Article.findOneAndUpdate(
@@ -79,7 +85,7 @@ module.exports = {
     },
     deleteTags: async (req, res, next) => {
         try {
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const { _id, tags } = req.body
             const tag_ids = tags.map(tag => tag._id)
             const article = await Article.findOneAndUpdate(
@@ -94,7 +100,7 @@ module.exports = {
     },
     updateTag: async (req, res, next) => {
         try {
-            const user = await User.findById(req.decoded.user_id)
+            const user = await User.findById(req.decoded.user._id)
             const { _id, tags } = req.body
             const tag_ids = tags.map(tag => tag._id)
             const article = await Article.findOneAndUpdate(
