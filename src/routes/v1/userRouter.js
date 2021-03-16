@@ -5,13 +5,15 @@ const { validateToken } = require('../../middlewares/validator/jwtvalidator');
 const userController = require('../../controllers/userController')
 // login
 router.post('/login', userController.login)
+// authenticate
+router.get('/authenticate', userController.authenticate)
 // create
 router.post('/', userController.create)
-//read
+// read
 router.get('/', validateToken, userController.read)
-//update
+// update
 router.put('/', userController.update)
-//delete
+// delete
 router.delete('/', validateToken, userController.delete)
 
 module.exports = router

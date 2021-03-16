@@ -102,6 +102,7 @@ module.exports = {
                 expiresIn: '2d',
                 issuer: 'shuji watanabe'
             }
+            req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
             res.json({
                 payload: payload,
                 options: options,
@@ -111,5 +112,9 @@ module.exports = {
         } catch (e) {
             next(e)
         }
+    },
+    authenticate: async (req, res, next) => {
+        console.log(req.session.token)
+        res.json('test')
     }
 }

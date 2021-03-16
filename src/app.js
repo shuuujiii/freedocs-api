@@ -2,12 +2,26 @@ require('dotenv').config()
 
 const express = require('express')
 const app = express()
+const session = require('express-session')
 const cors = require('cors');
 const logger = require('morgan')
 const mongoose = require('mongoose')
 const errorHandler = require('./utils/errorhandler').handler
 const environment = process.env.NODE_ENV;
 const stage = require('./configs/config')[environment];
+
+
+// session
+app.use(session({
+  secret: process.env.JWT_SECRET,
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    httpOnly: true,
+    secure: true,
+    maxage: 1000 * 60 * 60, //60 min
+  }
+}))
 
 let whitelist = process.env.WHITE_LIST.split(' ')
 app.use(cors({
