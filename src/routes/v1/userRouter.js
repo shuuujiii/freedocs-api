@@ -6,7 +6,7 @@ const userController = require('../../controllers/userController')
 // login
 router.post('/login', userController.login)
 // authenticate
-router.get('/authenticate', userController.authenticate)
+router.post('/authenticate', validateToken, userController.authenticate)
 // create
 router.post('/', userController.create)
 // read

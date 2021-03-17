@@ -4,17 +4,14 @@ const { StatusCodes, getReasonPhrase } = require('http-status-codes')
 module.exports = {
     validateToken: (req, res, next) => {
         try {
-            const authorizationHeader = req.headers.authorization;
-            if (!authorizationHeader) {
-                throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'Token required', true)
-            }
-
-            // const token = req.headers.authorization.split(' ')[1]; // Bearer <token>
             const token = () => {
                 if (req.session && req.session.token) { return req.session.token };
+                const authorizationHeader = req.headers.authorization;
+                if (!authorizationHeader) {
+                    throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'Token required', true)
+                }
                 return req.headers.authorization.split(' ')[1]; // Bearer <token>)
             };
-            console.log('token is ', token)
             const options = {
                 expiresIn: '2d',
                 issuer: 'shuji watanabe'

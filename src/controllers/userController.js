@@ -102,11 +102,14 @@ module.exports = {
                 expiresIn: '2d',
                 issuer: 'shuji watanabe'
             }
-            req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            // res.cookie('token', token, { httpOnly: true });
+            req.session.token = token;
+            req.session.user = user
             res.json({
                 payload: payload,
                 options: options,
-                token: jwt.sign(payload, process.env.JWT_SECRET, options)
+                token: token
             })
 
         } catch (e) {
@@ -114,7 +117,14 @@ module.exports = {
         }
     },
     authenticate: async (req, res, next) => {
-        console.log(req.session.token)
-        res.json('test')
+        const payload = {
+            user: req.session.user
+        }
+        const options = {
+            expiresIn: '2d',
+            issuer: 'shuji watanabe'
+        }
+        req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
+        res.json('authenticated')
     }
 }
