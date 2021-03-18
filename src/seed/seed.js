@@ -37,7 +37,6 @@ try {
             for (let i = 1; i <= 100; i++) {
                 seedArtcles.push(
                     {
-                        title: 'title' + i,
                         url: 'http://localhost/' + i,
                         tags: [],
                         user: user._id

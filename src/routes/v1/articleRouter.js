@@ -9,9 +9,9 @@ const { AppError } = require('../../utils/appError')
 
 const validateParam = async (req, res, next) => {
     try {
-        const { title, url, tags } = req.body
+        const { url, tags } = req.body
         const user_id = req.decoded.user._id
-        await ArticleValidator.validateAsync({ title: title, url: url, user: user_id, tags: tags })
+        await ArticleValidator.validateAsync({ url: url, user: user_id, tags: tags })
             .catch(err => {
                 throw new AppError(err.name, StatusCodes.BAD_REQUEST, err.message, true)
             });

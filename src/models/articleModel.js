@@ -2,10 +2,6 @@ const mongoose = require('mongoose')
 
 let ArticleSchema = new mongoose.Schema(
     {
-        title: {
-            type: String,
-            require: true,
-        },
         url: {
             type: String,
             require: true

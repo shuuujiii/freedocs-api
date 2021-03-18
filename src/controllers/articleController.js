@@ -6,10 +6,9 @@ const { AppError } = require('../utils/appError')
 module.exports = {
     create: async (req, res, next) => {
         try {
-            const { title, url, tags } = req.body
+            const { url, tags } = req.body
             const user = await User.findById(req.decoded.user._id)
             const article = await Article.create({
-                title: title,
                 url: url,
                 tags: tags,
                 user: user._id,
@@ -33,14 +32,12 @@ module.exports = {
     },
     update: async (req, res, next) => {
         try {
-            const { _id, title, url, tags } = req.body
-            // const tag_ids = tags.map(tag => tag._id)
+            const { _id, url, tags } = req.body
             const user = await User.findById(req.decoded.user._id)
             const article = await Article.findOneAndUpdate({
                 _id: _id,
                 user: user._id
             }, {
-                title: title,
                 url: url,
                 tags: tags
             }, {
