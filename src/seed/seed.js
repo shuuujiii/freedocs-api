@@ -25,7 +25,7 @@ try {
     (async function () {
         try {
             const isExistUser = await User.find({ username: 'seedUser' })
-            if (isExistUser) {
+            if (isExistUser.length !== 0) {
                 console.log('Please delete seed');
                 return;
             }
