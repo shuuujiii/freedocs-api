@@ -37,13 +37,13 @@ module.exports = {
     read: async (req, res, next) => {
         try {
             // check authenticate user
-            if (req.decoded.user.username !== req.query.username) {
-                throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'not authorized', true)
-            }
+            // if (req.decoded.user.username !== req.query.username) {
+            //     throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'not authorized', true)
+            // }
 
             // find user
             const user = await User.findOne({
-                username: req.query.username
+                username: req.decoded.user.username
             })
 
             // check user exist
