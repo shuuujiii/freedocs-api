@@ -1,11 +1,13 @@
-const User = require('../models/userModel')
-const UserValidator = require('../middlewares/validator/userValidator')
+const User = require('../models/userModel');
+const Article = require('../models/articleModel');
+const Tag = require('../models/tagModel');
+const UserValidator = require('../middlewares/validator/userValidator');
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
-const { AppError } = require('../utils/appError')
+const { AppError } = require('../utils/appError');
 const environment = process.env.NODE_ENV;
 const stage = require('../configs/config.js')[environment];
-const jwt = require('jsonwebtoken')
+const jwt = require('jsonwebtoken');
 
 module.exports = {
     create: async (req, res, next) => {
@@ -70,9 +72,17 @@ module.exports = {
         res.json(user)
     },
     delete: async (req, res) => {
-        const { username } = req.body
-        const user = await User.deleteOne({ 'username': username })
-        res.json(user)
+        const user = await User.findById(req.decoded.user._id)
+        console.log(req.decoded)
+        if (!user) {
+            throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
+        }
+        const deleteArticles = await Article.deleteMany({ user: user._id })
+        // const deleteTags = await Tag.deleteMany()
+        const deleteUser = await User.deleteOne({ _id: user._id })
+        // const user = await User.deleteOne({ 'username': username })
+        req.session.token = null;
+        res.status(StatusCodes.OK).json({ message: 'successfully delete user' })
     },
     login: async (req, res, next) => {
         try {
