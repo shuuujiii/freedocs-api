@@ -2,7 +2,7 @@ module.exports = {
     development: {
         dbUri: process.env.MONGODB_URI_LOCAL,
         port: process.env.PORT || 5000,
-        saltingRounds: 10
+        saltingRounds: 11
     },
     test: {
         dbUri: process.env.MONGODB_URI_TEST,
