@@ -6,6 +6,9 @@ let ArticleSchema = new mongoose.Schema(
             type: String,
             require: true
         },
+        description: {
+            type: String,
+        },
         tags: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Tag'

@@ -6,12 +6,18 @@ const ArticleValidator = require('../../middlewares/validator/articleValidator')
 const TagValidator = require('../../middlewares/validator/tagValidator')
 const articleController = require('../../controllers/articleController')
 const { AppError } = require('../../utils/appError')
+const { description } = require('../../middlewares/validator/articleValidator')
 
 const validateParam = async (req, res, next) => {
     try {
-        const { url, tags } = req.body
+        const { url, tags, description } = req.body
         const user_id = req.decoded.user._id
-        await ArticleValidator.validateAsync({ url: url, user: user_id, tags: tags })
+        await ArticleValidator.validateAsync({
+            url: url,
+            description: description,
+            user: user_id,
+            tags: tags
+        })
             .catch(err => {
                 throw new AppError(err.name, StatusCodes.BAD_REQUEST, err.message, true)
             });
