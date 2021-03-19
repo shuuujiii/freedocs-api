@@ -6,9 +6,9 @@ module.exports = {
         try {
             const { name } = req.body
             const isExistTag = await Tag.findOne({ name: name })
-            console.log(isExistTag)
             if (isExistTag) {
-                throw new AppError('AppError', StatusCodes.CONFLICT, 'already exist the tag name', true)
+                return res.status(StatusCodes.OK).json(isExistTag)
+                // throw new AppError('AppError', StatusCodes.CONFLICT, 'already exist the tag name', true)
             }
             const tag = await Tag.create({ name: name })
             res.status(StatusCodes.CREATED).json(tag)
