@@ -45,22 +45,6 @@ module.exports = {
                         }
                     }
                 },
-                // fix user array to one dimention array
-                {
-                    $project: {
-                        _id: 1,
-                        tags: 1,
-                        users: {
-                            $reduce: {
-                                input: '$users',
-                                initialValue: [],
-                                in: {
-                                    $concatArrays: ["$$value", "$$this"]
-                                }
-                            }
-                        }
-                    }
-                },
                 // delete duplicate user id
                 {
                     $project: {
@@ -68,8 +52,18 @@ module.exports = {
                         tags: 1,
                         user_ids: {
                             $reduce: {
-                                input: '$users',
+                                input: {
+                                    // get all user id ( duplicated) this $users structure is like [[1,2,3],[1,2],[1]]
+                                    $reduce: {
+                                        input: '$users',
+                                        initialValue: [],
+                                        in: {
+                                            $concatArrays: ["$$value", "$$this"]
+                                        }
+                                    }
+                                },
                                 initialValue: [],
+                                // remove duplicate user id
                                 in: {
                                     $cond: [
                                         { $in: ["$$this", "$$value"] }, /** Check if 'id' exists in holding array if yes push same array or concat holding array with & array of new object */
@@ -91,6 +85,14 @@ module.exports = {
                         as: "users"
                     }
                 },
+                //result
+                {
+                    $project: {
+                        "_id": 1,
+                        "tags": 1,
+                        "users.username": 1,
+                    }
+                }
             ])
 
             res.json(articles)
