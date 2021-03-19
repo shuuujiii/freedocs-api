@@ -8,7 +8,9 @@
     "alltest": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
     "test": "cross-env NODE_ENV=test mocha --timeout 10000",
     "seed": "cross-env NODE_ENV=development node ./src/seed/seed.js",
-    "deleteseed": "cross-env NODE_ENV=development node ./src/seed/deleteseed.js"
+    "deleteseed": "cross-env NODE_ENV=development node ./src/seed/deleteseed.js",
+    "groupseed": "cross-env NODE_ENV=development node ./src/seed/groupseed.js",
+    "deletegroupseed": "cross-env NODE_ENV=development node ./src/seed/deletegroupseed.js"
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
