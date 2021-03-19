@@ -33,12 +33,14 @@ try {
                 username: 'seedUser',
                 password: bcrypt.hashSync('seedseed', stage.saltingRounds),
             })
+            const tags = await Tag.insertMany([{ name: 'testTag1' }, { name: 'testTag2' }])
+            // console.log(tags)
             let seedArtcles = []
             for (let i = 1; i <= 100; i++) {
                 seedArtcles.push(
                     {
                         url: 'http://localhost/' + i,
-                        tags: [],
+                        tags: tags.map(tag => tag._id),
                         user: user._id
                     })
             }

@@ -35,6 +35,13 @@ try {
             const deletedUsers = await User.deleteMany({ username: 'seedUser' })
             console.log('deletedUsers', deletedUsers)
             const deletedArticles = await Article.deleteMany({ user: { $in: users }, })
+            const deleteTags = await Tag.deleteMany({
+                name: {
+                    $in: ['testTag1', 'testTag2']
+                }
+
+            })
+            console.log('deleteTags', deleteTags)
 
         } catch (e) {
             console.log(e)
