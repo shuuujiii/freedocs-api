@@ -36,8 +36,9 @@ module.exports = {
                         _id: { 'url': '$_id.url' },
                         tags: {
                             $push: {
-                                tag: { "$arrayElemAt": ["$tagdoc", 0] },
-                                tagcount: '$count'
+                                _id: { "$arrayElemAt": ["$tagdoc._id", 0] },
+                                name: { "$arrayElemAt": ["$tagdoc.name", 0] },
+                                count: '$count'
                             }
                         },
                         users: {
@@ -69,7 +70,6 @@ module.exports = {
                                         { $in: ["$$this", "$$value"] }, /** Check if 'id' exists in holding array if yes push same array or concat holding array with & array of new object */
                                         "$$value",
                                         { $concatArrays: ["$$value", ["$$this"]] }
-
                                     ]
                                 }
                             }
@@ -89,7 +89,7 @@ module.exports = {
                 {
                     $project: {
                         "_id": 1,
-                        "tags": 1,
+                        'tags': 1,
                         "users.username": 1,
                     }
                 }
