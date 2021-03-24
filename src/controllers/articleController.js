@@ -23,9 +23,37 @@ module.exports = {
     read: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-            const articles = await Article.find({
-                user: user._id
-            }).populate('tags')
+
+
+            const stages = [
+                {
+                    "$match": {
+                        "user": user._id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": 'tags',
+                        "localField": "tags",
+                        "foreignField": "_id",
+                        "as": "tags"
+                    }
+                },
+
+            ]
+            if (req.query.search) {
+                let resampe = new RegExp(req.query.search, 'i');
+                stages.push({
+                    "$match": {
+                        "$or": [
+                            { "tags.name": { "$all": [resampe] } },
+                            { "url": resampe },
+                            { "description": resampe },
+                        ]
+                    }
+                })
+            }
+            const articles = await Article.aggregate(stages)
             res.json(articles)
         } catch (e) {
             next(e)

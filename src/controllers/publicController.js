@@ -6,7 +6,7 @@ const { AppError } = require('../utils/appError')
 module.exports = {
     read: async (req, res, next) => {
         try {
-            const articles = await Article.aggregate([
+            const stages = [
                 { $unwind: '$tags' },
                 // get tag count
                 {
@@ -29,7 +29,11 @@ module.exports = {
                         foreignField: "_id",
                         as: "tagdoc"
                     }
-                },
+                },]
+
+
+
+            stages.push(
                 // make url group
                 {
                     $group: {
@@ -46,6 +50,21 @@ module.exports = {
                         }
                     }
                 },
+            )
+            if (req.query.search) {
+                let resampe = new RegExp(req.query.search, 'i');
+                stages.push(
+                    {
+                        "$match": {
+                            "$or": [
+                                { "tags.name": { "$all": [resampe] } },
+                                { "_id.url": resampe },
+                            ]
+                        }
+                    },
+                )
+            }
+            stages.push(
                 // delete duplicate user id
                 {
                     $project: {
@@ -93,7 +112,8 @@ module.exports = {
                         "users.username": 1,
                     }
                 }
-            ])
+            )
+            const articles = await Article.aggregate(stages)
 
             res.json(articles)
         } catch (e) {
