@@ -37,11 +37,18 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
-    sameSite: false,
+    sameSite: 'none',
     secure: environment === 'production' ? true : false,
     maxage: 1000 * 60 * 60, //60 min
   }
 }))
+app.all('*', function (req, res, next) {
+
+  res.setHeader("Access-Control-Allow-Origin", 'https://freedocs.herokuapp.com');
+  res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
+  res.setHeader("Access-Control-Allow-Credentials", true);
+  next();
+});
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
