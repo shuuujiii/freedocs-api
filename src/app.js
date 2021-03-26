@@ -30,6 +30,7 @@ app.use(cors({
 app.use(cookieParser())
 
 // session
+app.set('trust proxy', 1)
 app.use(session({
   secret: process.env.JWT_SECRET,
   resave: false,
