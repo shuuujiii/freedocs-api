@@ -141,7 +141,6 @@ module.exports = {
         }
     },
     logout: async (req, res, next) => {
-        console.log('logout')
         req.session.token = null
         res.status(StatusCodes.OK).json({ message: 'logout' })
     },
