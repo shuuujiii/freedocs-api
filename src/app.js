@@ -37,6 +37,7 @@ app.use(session({
   saveUninitialized: true,
   cookie: {
     httpOnly: true,
+    sameSite: false,
     secure: environment === 'production' ? true : false,
     maxage: 1000 * 60 * 60, //60 min
   }
