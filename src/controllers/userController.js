@@ -140,6 +140,11 @@ module.exports = {
             next(e)
         }
     },
+    logout: async (req, res, next) => {
+        console.log('logout')
+        req.session.token = null
+        res.status(StatusCodes.OK).json({ message: 'logout' })
+    },
     authenticate: async (req, res, next) => {
         const payload = {
             user: req.session.user

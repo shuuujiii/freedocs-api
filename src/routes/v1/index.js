@@ -9,6 +9,6 @@ const publicRouter = require('./publidRouter')
 router.use('/users', userRouter)
 router.use('/article', articleRouter)
 router.use('/tag', tagRouter)
-router.use('/main', publicRouter)
+// router.use('/main', publicRouter)
 
 module.exports = router

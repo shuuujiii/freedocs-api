@@ -5,6 +5,8 @@ const { validateToken } = require('../../middlewares/validator/jwtvalidator');
 const userController = require('../../controllers/userController')
 // login
 router.post('/login', userController.login)
+// logout
+router.post('/logout', userController.logout)
 // authenticate
 router.post('/authenticate', validateToken, userController.authenticate)
 // create
