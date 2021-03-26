@@ -100,6 +100,7 @@ module.exports = {
     },
     login: async (req, res, next) => {
         try {
+            console.log('protocol', req.protocol)
             const { username, password } = req.body;
             // find user
             const user = await User.findOne({ username: username })
