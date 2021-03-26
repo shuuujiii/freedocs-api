@@ -30,6 +30,20 @@ module.exports = {
                 username: username,
                 password: bcrypt.hashSync(password, stage.saltingRounds),
             })
+
+            // authenticated
+            const payload = {
+                user: user
+            }
+            const options = {
+                expiresIn: '2d',
+                issuer: 'shuji watanabe'
+            }
+            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            // res.cookie('token', token, { httpOnly: true });
+            req.session.token = token;
+            req.session.user = user;
+
             res.status(StatusCodes.CREATED)
                 .json({ username: user.username })
         } catch (e) {
