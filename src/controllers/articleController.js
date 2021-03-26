@@ -59,6 +59,36 @@ module.exports = {
             next(e)
         }
     },
+    readall: async (req, res, next) => {
+        try {
+            const stages = [
+                {
+                    "$lookup": {
+                        "from": 'tags',
+                        "localField": "tags",
+                        "foreignField": "_id",
+                        "as": "tags"
+                    }
+                },
+
+            ]
+            if (req.query.search) {
+                let resampe = new RegExp(req.query.search, 'i');
+                stages.push({
+                    "$match": {
+                        "$or": [
+                            { "tags.name": { "$all": [resampe] } },
+                            { "url": resampe },
+                        ]
+                    }
+                })
+            }
+            const articles = await Article.aggregate(stages)
+            res.status(StatusCodes.OK).json(articles)
+        } catch (e) {
+            next(e)
+        }
+    },
     update: async (req, res, next) => {
         try {
             const { _id, url, tags, description } = req.body
