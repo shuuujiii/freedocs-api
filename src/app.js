@@ -44,7 +44,7 @@ app.use(session({
 }))
 app.all('*', function (req, res, next) {
 
-  res.setHeader("Access-Control-Allow-Origin", 'https://freedocs.herokuapp.com');
+  res.setHeader("Access-Control-Allow-Origin", 'https://freedocs.herokuapp.com:3000');
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
   res.setHeader("Access-Control-Allow-Credentials", true);
   next();
