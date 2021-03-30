@@ -21,7 +21,7 @@ app.use(cors({
     if (whitelist.indexOf(origin) !== -1) {
       callback(null, true)
     } else {
-      callback(new Error('Not allowed by CORS' + origin))
+      callback(new Error('Not allowed by CORS:' + origin))
     }
   }
 }));
@@ -43,8 +43,8 @@ app.use(session({
   }
 }))
 app.all('*', function (req, res, next) {
-
-  res.setHeader("Access-Control-Allow-Origin", 'https://freedocs.herokuapp.com:3000');
+  console.log('app.all called')
+  res.setHeader("Access-Control-Allow-Origin", whitelist);
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
   res.setHeader("Access-Control-Allow-Credentials", true);
   next();
