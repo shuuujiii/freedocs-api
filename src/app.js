@@ -57,7 +57,10 @@ app.use(express.json())
 if (environment === 'development') {
   app.use(logger('dev'));
 }
-
+// test
+app.get('/test', function (req, res) {
+  res.send('hello world')
+})
 // router
 let router = require('./routes/v1/');
 app.use('/api/v1/', router);
