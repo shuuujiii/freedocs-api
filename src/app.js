@@ -38,12 +38,11 @@ app.use(session({
   cookie: {
     httpOnly: true,
     sameSite: 'none',
-    secure: environment === 'production' ? true : false,
+    secure: environment !== 'development' ? true : false,
     maxage: 1000 * 60 * 60, //60 min
   }
 }))
 app.all('*', function (req, res, next) {
-  console.log('app.all called')
   res.setHeader("Access-Control-Allow-Origin", whitelist);
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
   res.setHeader("Access-Control-Allow-Credentials", true);
