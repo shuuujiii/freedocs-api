@@ -43,6 +43,7 @@ app.use(session({
   }
 }))
 app.all('*', function (req, res, next) {
+  console.log('whitelist:', whitelist)
   res.setHeader("Access-Control-Allow-Origin", whitelist);
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
   res.setHeader("Access-Control-Allow-Credentials", true);

@@ -6,7 +6,6 @@ const ArticleValidator = require('../../middlewares/validator/articleValidator')
 const TagValidator = require('../../middlewares/validator/tagValidator')
 const articleController = require('../../controllers/articleController')
 const { AppError } = require('../../utils/appError')
-const { description } = require('../../middlewares/validator/articleValidator')
 
 const validateParam = async (req, res, next) => {
     try {
