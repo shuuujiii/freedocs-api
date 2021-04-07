@@ -11,6 +11,7 @@ const MongoStore = require('connect-mongo');
 const errorHandler = require('./utils/errorhandler').handler
 const environment = process.env.NODE_ENV;
 const stage = require('./configs/config')[environment];
+const basicAuth = require('./utils/basicAuth')
 
 let whitelist = process.env.WHITE_LIST.split(' ')
 app.use(cors({
@@ -24,6 +25,9 @@ app.use(cors({
     }
   }
 }));
+
+//basic auth
+app.use(basicAuth)
 
 // cookie
 app.use(cookieParser())
