@@ -12,6 +12,6 @@ module.exports = (request, response, next) => {
         }
     }
 
-    response.set('WWW-Authenticate', 'Basic realm="example"')
+    response.set('WWW-Authenticate', 'Basic realm="Access to the staging site", charset="UTF-8"')
     return response.status(401).send()
 }

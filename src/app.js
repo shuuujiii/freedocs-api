@@ -27,7 +27,9 @@ app.use(cors({
 }));
 
 //basic auth
-app.use(basicAuth)
+if (environment === 'staging') {
+  app.use(basicAuth)
+}
 
 // cookie
 app.use(cookieParser())
@@ -41,7 +43,7 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: stage.dbUri }),
   cookie: {
     httpOnly: true,
-    sameSite: 'none',
+    sameSite: environment !== 'development' ? 'none' : 'lax',
     secure: environment !== 'development' ? true : false,
     maxAge: 1000 * 60 * 60, //60 min
   }
@@ -79,8 +81,8 @@ mongoose.connect(stage.dbUri,
   }
 )
 const db = mongoose.connection
-db.on('error', console.error.bind(console, 'MongoDB connection error:'))
-db.once('open', () => console.log('MongoDB connection successful'))
+// db.on('error', console.error.bind(console, 'MongoDB connection error:'))
+// db.once('open', () => console.log('MongoDB connection successful'))
 
 // error handling
 app.use(async (err, req, res, next) => {
