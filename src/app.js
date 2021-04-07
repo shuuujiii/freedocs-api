@@ -7,11 +7,10 @@ const cors = require('cors');
 const logger = require('morgan')
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose')
+const MongoStore = require('connect-mongo');
 const errorHandler = require('./utils/errorhandler').handler
 const environment = process.env.NODE_ENV;
 const stage = require('./configs/config')[environment];
-
-
 
 let whitelist = process.env.WHITE_LIST.split(' ')
 app.use(cors({
@@ -35,15 +34,15 @@ app.use(session({
   secret: process.env.JWT_SECRET,
   resave: false,
   saveUninitialized: true,
+  store: MongoStore.create({ mongoUrl: stage.dbUri }),
   cookie: {
     httpOnly: true,
-    sameSite: 'none',
+    // sameSite: 'none',
     secure: environment !== 'development' ? true : false,
-    maxage: 1000 * 60 * 60, //60 min
+    maxAge: 1000 * 60 * 60, //60 min
   }
 }))
 app.all('*', function (req, res, next) {
-  console.log('whitelist:', whitelist)
   res.setHeader("Access-Control-Allow-Origin", whitelist);
   res.setHeader("Access-Control-Allow-Headers", "X-Requested-With");
   res.setHeader("Access-Control-Allow-Credentials", true);
@@ -58,9 +57,11 @@ if (environment === 'development') {
   app.use(logger('dev'));
 }
 // test
-app.get('/test', function (req, res) {
+app.get('/api/v1/test', function (req, res) {
+  console.log('[test] session', req.session)
   res.send('hello world')
 })
+
 // router
 let router = require('./routes/v1/');
 app.use('/api/v1/', router);

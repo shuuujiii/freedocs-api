@@ -92,15 +92,12 @@ module.exports = {
             throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
         }
         const deleteArticles = await Article.deleteMany({ user: user._id })
-        // const deleteTags = await Tag.deleteMany()
         const deleteUser = await User.deleteOne({ _id: user._id })
-        // const user = await User.deleteOne({ 'username': username })
         req.session.token = null;
         res.status(StatusCodes.OK).json({ message: 'successfully delete user' })
     },
     login: async (req, res, next) => {
         try {
-            console.log('protocol', req.protocol)
             const { username, password } = req.body;
             // find user
             const user = await User.findOne({ username: username })
@@ -128,9 +125,8 @@ module.exports = {
                 issuer: 'shuji watanabe'
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET, options)
-            // res.cookie('token', token, { httpOnly: true });
             req.session.token = token;
-            req.session.user = user
+            req.session.user = user;
             res.json({
                 payload: payload,
                 options: options,
@@ -142,8 +138,8 @@ module.exports = {
         }
     },
     logout: async (req, res, next) => {
-        req.session.token = null
-        res.status(StatusCodes.OK).json({ message: 'logout' })
+        req.session.destroy();
+        res.clearCookie('connect.sid', { path: '/' }).status(StatusCodes.OK).json({ message: 'logout' })
     },
     authenticate: async (req, res, next) => {
         const payload = {
@@ -153,6 +149,7 @@ module.exports = {
             expiresIn: '2d',
             issuer: 'shuji watanabe'
         }
+
         req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
         res.json('authenticated')
     }
