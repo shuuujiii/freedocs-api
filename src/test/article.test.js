@@ -25,9 +25,9 @@ describe('article api', () => {
         const user = await User.create({ username: defaultUser.username, password: bc.hashPassword(defaultUser.password) })
         const user2 = await User.create({ username: otherUser.username, password: bc.hashPassword(otherUser.password) })
         articles = await Article.create(
-            { title: 'default title', url: 'https://yahoo.co.jp', user: user._id },
-            { title: 'default title2', url: 'https://qiita.com', user: user._id },
-            { title: 'other user', url: 'https://dev.to', user: user2.tag_ids })
+            { description: 'default description', url: 'https://yahoo.co.jp', user: user._id },
+            { description: 'default description2', url: 'https://qiita.com', user: user._id },
+            { description: 'other user', url: 'https://dev.to', user: user2.tag_ids })
         tags = await Tag.create({ name: 'javascript' }, { name: 'node' })
     });
     // get token
@@ -58,14 +58,14 @@ describe('article api', () => {
         it('it should create article', (done) => {
             chai.request(app)
                 .post('/api/v1/article')
-                .send({ title: 'some title', url: "https://google.com", tags: [] })
+                .send({ description: 'some description', url: "https://google.com", tags: [] })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
                     res.should.have.status(StatusCodes.OK);
-                    res.body.should.have.property('title')
+                    res.body.should.have.property('description')
                     res.body.should.have.property('url')
                     res.body.should.have.property('tags')
-                    res.body.title.should.to.eql('some title')
+                    res.body.description.should.to.eql('some description')
                     res.body.url.should.to.eql('https://google.com')
                     res.body.tags.should.to.eql([])
                     done();
@@ -75,7 +75,7 @@ describe('article api', () => {
             const tag_ids = tags.map(tag => tag._id)
             chai.request(app)
                 .post('/api/v1/article')
-                .send({ title: 'some title', url: "https://google.com", tags: tag_ids })
+                .send({ description: 'some description', url: "https://google.com", tags: tag_ids })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
                     if (err) {
@@ -83,49 +83,45 @@ describe('article api', () => {
                         done();
                     }
                     res.should.have.status(StatusCodes.OK);
-                    res.body.should.have.property('title');
+                    res.body.should.have.property('description');
                     res.body.should.have.property('url');
                     res.body.should.have.property('tags');
-                    res.body.title.should.to.eql('some title');
+                    res.body.description.should.to.eql('some description');
                     res.body.url.should.to.eql('https://google.com');
                     res.body.tags[0]._id.should.to.eql(tag_ids[0].toString())
                     res.body.tags[1]._id.should.to.eql(tag_ids[1].toString())
                     done();
                 });
         });
-        it('it should not create article with lack of title param', (done) => {
-            chai.request(app)
-                .post('/api/v1/article')
-                .send({ title: '', url: "https://google.com" })
-                .set({ Authorization: `Bearer ${token}` })
-                .end((err, res) => {
-                    res.should.have.status(StatusCodes.BAD_REQUEST);
-                    // res.body.title.should.to.eql('some title')
-                    // res.body.url.should.to.eql('https://google.com')
-                    done();
-                });
-        });
+        // it.only('it should not create article with lack of description param', (done) => {
+        //     chai.request(app)
+        //         .post('/api/v1/article')
+        //         .send({ url: "https://google.com", tags: [] })
+        //         .set({ Authorization: `Bearer ${token}` })
+        //         .end((err, res) => {
+        //             res.should.have.status(StatusCodes.BAD_REQUEST);
+        //             // res.body.title.should.to.eql('some title')
+        //             // res.body.url.should.to.eql('https://google.com')
+        //             done();
+        //         });
+        // });
         it('it should not create article with lack of url param', (done) => {
             chai.request(app)
                 .post('/api/v1/article')
-                .send({ title: 'title', url: "" })
+                .send({ url: "" })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
                     res.should.have.status(StatusCodes.BAD_REQUEST);
-                    // res.body.title.should.to.eql('some title')
-                    // res.body.url.should.to.eql('https://google.com')
                     done();
                 });
         });
         it('it should not create article with lack of tags param', (done) => {
             chai.request(app)
                 .post('/api/v1/article')
-                .send({ title: 'some title', url: "https://google.com" })
+                .send({ url: "https://google.com", description: 'some description' })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
                     res.should.have.status(StatusCodes.BAD_REQUEST);
-                    // res.body.title.should.to.eql('some title')
-                    // res.body.url.should.to.eql('https://google.com')
                     done();
                 });
         });
@@ -146,12 +142,12 @@ describe('article api', () => {
         it('it should only update own article', (done) => {
             chai.request(app)
                 .put('/api/v1/article')
-                .send({ _id: articles[0]._id, title: 'updated title', url: 'https://update.com', tags: [tags[0]._id.toString()] })
+                .send({ _id: articles[0]._id, description: 'updated description', url: 'https://update.com', tags: [tags[0]._id.toString()] })
                 .set({ Authorization: `Bearer ${token}` })
                 .end((err, res) => {
                     should.not.exist(err)
                     res.should.have.status(StatusCodes.OK);
-                    res.body.title.should.to.eql('updated title')
+                    res.body.description.should.to.eql('updated description')
                     res.body.url.should.to.eql('https://update.com')
                     // tags
                     expect(res.body.tags).to.length(1)
@@ -162,7 +158,7 @@ describe('article api', () => {
         it('it should not update other users article', (done) => {
             chai.request(app)
                 .put('/api/v1/article')
-                .send({ _id: articles[0]._id, title: 'updated title', url: 'https://update.com', tags: [tags[0]._id.toString()] })
+                .send({ _id: articles[0]._id, description: 'updated description', url: 'https://update.com', tags: [tags[0]._id.toString()] })
                 .set({ Authorization: `Bearer ${otherUserToken}` })
                 .end((err, res) => {
                     res.should.have.status(StatusCodes.NO_CONTENT);

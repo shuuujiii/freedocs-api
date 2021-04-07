@@ -62,6 +62,9 @@ module.exports = {
                 username: req.decoded.user.username
             })
 
+            // console.log('username', req.decoded.user.username)
+            // console.log('user is', user)
+
             // check user exist
             if (user === null) {
                 throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user not found', true)
@@ -87,7 +90,6 @@ module.exports = {
     },
     delete: async (req, res) => {
         const user = await User.findById(req.decoded.user._id)
-        console.log(req.decoded)
         if (!user) {
             throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
         }
