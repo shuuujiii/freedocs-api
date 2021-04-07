@@ -40,6 +40,8 @@ router.post('/tag', validateToken, articleController.addTags)
 
 router.delete('/tag', validateToken, articleController.deleteTags)
 
+router.post('/likes', validateToken, articleController.addLikes)
+
 router.put('/tag', validateToken, articleController.updateTag)
 
 module.exports = router

@@ -2,6 +2,8 @@ const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
 const User = require('../models/userModel')
 const { AppError } = require('../utils/appError')
+const ObjectId = require('mongoose').Types.ObjectId;
+const jwt = require('jsonwebtoken');
 
 module.exports = {
     create: async (req, res, next) => {
@@ -23,8 +25,6 @@ module.exports = {
     read: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-
-
             const stages = [
                 {
                     "$match": {
@@ -60,6 +60,32 @@ module.exports = {
         }
     },
     readall: async (req, res, next) => {
+        const token = () => {
+            if (req.session && req.session.token) { return req.session.token };
+            const authorizationHeader = req.headers.authorization;
+            if (!authorizationHeader) {
+                return null
+            }
+            return req.headers.authorization.split(' ')[1]; // Bearer <token>)
+        };
+        const options = {
+            expiresIn: '2d',
+            issuer: 'shuji watanabe'
+        };
+        // verify makes sure that the token hasn't expired and has been issued by us
+        let decoded = null
+        try {
+            decoded = jwt.verify(token(), process.env.JWT_SECRET, options);
+        } catch {
+
+        }
+        let user_id = null
+        if (decoded) {
+            user_id = decoded.user._id
+        }
+        // const user_id = req.decoded && req.decoded.user && req.decoded.user._id || null
+        // const user = await User.findById(user_id)
+        console.log('user_id', user_id)
         try {
             const stages = [
                 {
@@ -70,7 +96,24 @@ module.exports = {
                         "as": "tags"
                     }
                 },
-
+                // {
+                //     "$addFields": {
+                //         'isYourFavorite': 'test'
+                //     }
+                // },
+                {
+                    "$addFields": {
+                        "isFavorite": {
+                            "$size": {
+                                "$filter": {
+                                    "input": "$likes",
+                                    "as": "item",
+                                    "cond": { "$eq": ["$$item", ObjectId(user_id)] }
+                                }
+                            }
+                        }
+                    }
+                }
             ]
             if (req.query.search) {
                 let resampe = new RegExp(req.query.search, 'i');
@@ -166,6 +209,25 @@ module.exports = {
                 { new: true }
             )
             res.json(article)
+        } catch (e) {
+            next(e)
+        }
+    },
+    addLikes: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { _id } = req.body
+            console.log(user, _id)
+            const article = await Article.findOneAndUpdate({
+                _id: _id,
+                // user: user._id
+            }, {
+                $addToSet: { likes: user._id }
+            }, {
+                new: true,
+            })
+            const populated = await Article.findById(article._id).populate('tags')
+            res.json(populated)
         } catch (e) {
             next(e)
         }
