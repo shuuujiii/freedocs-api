@@ -83,9 +83,6 @@ module.exports = {
         if (decoded) {
             user_id = decoded.user._id
         }
-        // const user_id = req.decoded && req.decoded.user && req.decoded.user._id || null
-        // const user = await User.findById(user_id)
-        console.log('user_id', user_id)
         try {
             const stages = [
                 {
@@ -96,11 +93,6 @@ module.exports = {
                         "as": "tags"
                     }
                 },
-                // {
-                //     "$addFields": {
-                //         'isYourFavorite': 'test'
-                //     }
-                // },
                 {
                     "$addFields": {
                         "isFavorite": {
@@ -216,18 +208,43 @@ module.exports = {
     addLikes: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-            const { _id } = req.body
-            console.log(user, _id)
+            const { _id, likes } = req.body
+            const update = likes ? { $addToSet: { likes: user._id } } : { $pull: { likes: user._id } }
             const article = await Article.findOneAndUpdate({
                 _id: _id,
-                // user: user._id
-            }, {
-                $addToSet: { likes: user._id }
-            }, {
+            }, update, {
                 new: true,
             })
-            const populated = await Article.findById(article._id).populate('tags')
-            res.json(populated)
+            const stages = [
+                {
+                    "$match": {
+                        _id: article._id
+                    }
+                },
+                {
+                    "$lookup": {
+                        "from": 'tags',
+                        "localField": "tags",
+                        "foreignField": "_id",
+                        "as": "tags"
+                    }
+                },
+                {
+                    "$addFields": {
+                        "isFavorite": {
+                            "$size": {
+                                "$filter": {
+                                    "input": "$likes",
+                                    "as": "item",
+                                    "cond": { "$eq": ["$$item", ObjectId(user._id)] }
+                                }
+                            }
+                        }
+                    }
+                }
+            ]
+            const updatedArticle = await Article.aggregate(stages)
+            res.json(updatedArticle)
         } catch (e) {
             next(e)
         }
