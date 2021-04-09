@@ -84,6 +84,28 @@ module.exports = {
             user_id = decoded.user._id
         }
         try {
+            const page = req.query.page || 1
+            // console.log('req.query.sort', req.query.sort)
+            const sortKey = req.query.sortkey || 'url'
+            const order = (function (order) {
+                if (!order) {
+                    return 1
+                }
+                if (order === 'asc') {
+                    return 1
+                }
+                if (order === 'desc') {
+                    return -1
+                }
+                return 1
+            })(req.query.order)
+            // const order = req.query.order || 1
+            // console.log('page', page)
+            const pagingOptions = {
+                page: page,
+                limit: 10,
+            };
+
             const stages = [
                 {
                     "$lookup": {
@@ -105,7 +127,13 @@ module.exports = {
                             }
                         }
                     }
-                }
+                },
+                //sort 
+                {
+                    '$sort': {
+                        [sortKey]: order
+                    }
+                },
             ]
             if (req.query.search) {
                 let resampe = new RegExp(req.query.search, 'i');
@@ -118,8 +146,10 @@ module.exports = {
                     }
                 })
             }
-            const articles = await Article.aggregate(stages)
-            res.status(StatusCodes.OK).json(articles)
+            const articleAggregate = Article.aggregate(stages)
+            const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
+            // return
+            res.status(StatusCodes.OK).json(paginated)
         } catch (e) {
             next(e)
         }
