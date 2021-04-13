@@ -1,7 +1,7 @@
 
 var express = require('express')
 var router = express.Router()
-const { validateToken } = require('../../middlewares/validator/jwtvalidator');
+const { validateToken, silentValidateToken: silentValudateToken } = require('../../middlewares/validator/jwtvalidator');
 const userController = require('../../controllers/userController')
 // login
 router.post('/login', userController.login)
@@ -9,6 +9,7 @@ router.post('/login', userController.login)
 router.post('/logout', userController.logout)
 // authenticate
 router.post('/authenticate', validateToken, userController.authenticate)
+router.post('/silent', silentValudateToken, userController.silent)
 // create
 router.post('/', userController.create)
 // read

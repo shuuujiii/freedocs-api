@@ -25,5 +25,30 @@ module.exports = {
         } catch (e) {
             next(e)
         }
+    },
+    silentValidateToken: (req, res, next) => {
+        try {
+            if (!req.session) {
+                // console.log('nosession', req.session)
+                return next()
+            }
+            if (!req.session.token) {
+                // console.log('no token', req.session.token)
+                return next()
+            }
+            // console.log('validate')
+            const options = {
+                expiresIn: '2d',
+                issuer: 'shuji watanabe'
+            };
+            // verify makes sure that the token hasn't expired and has been issued by us
+            const decoded = jwt.verify(req.session.token, process.env.JWT_SECRET, options);
+            // Let's pass back the decoded token to the request object
+            req.decoded = decoded;
+            // We call next to pass execution to the subsequent middleware
+            next();
+        } catch (e) {
+            next(e)
+        }
     }
 };

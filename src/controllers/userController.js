@@ -153,6 +153,28 @@ module.exports = {
         }
 
         req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
-        res.json('authenticated')
+        res.json({
+            payload: payload,
+        })
+    },
+    silent: async (req, res, next) => {
+        try {
+            // if (!req.decoded) { return res.json('no token') }
+            const payload = {
+                user: req.decoded ? req.decoded.user : null
+            }
+            const options = {
+                expiresIn: '2d',
+                issuer: 'shuji watanabe'
+            }
+
+            req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            res.json({
+                payload: payload,
+            })
+        } catch (e) {
+            next(e)
+        }
+        // res.json('authenticated')
     }
 }

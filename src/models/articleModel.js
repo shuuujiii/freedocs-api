@@ -22,6 +22,14 @@ let ArticleSchema = new mongoose.Schema(
         likes: [{
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User'
+        }],
+        good: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }],
+        bad: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
         }]
     }
 )

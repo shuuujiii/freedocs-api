@@ -16,6 +16,9 @@ module.exports = {
                 description: description,
                 tags: tags,
                 user: user._id,
+                likes: [],
+                good: [],
+                bad: [],
             })
             const populated = await Article.findById(article._id).populate('tags')
             res.json(populated)
@@ -61,29 +64,29 @@ module.exports = {
         }
     },
     readall: async (req, res, next) => {
-        const token = () => {
-            if (req.session && req.session.token) { return req.session.token };
-            const authorizationHeader = req.headers.authorization;
-            if (!authorizationHeader) {
-                return null
-            }
-            return req.headers.authorization.split(' ')[1]; // Bearer <token>)
-        };
-        const options = {
-            expiresIn: '2d',
-            issuer: 'shuji watanabe'
-        };
-        // verify makes sure that the token hasn't expired and has been issued by us
-        let decoded = null
-        try {
-            decoded = jwt.verify(token(), process.env.JWT_SECRET, options);
-        } catch {
+        // const token = () => {
+        //     if (req.session && req.session.token) { return req.session.token };
+        //     const authorizationHeader = req.headers.authorization;
+        //     if (!authorizationHeader) {
+        //         return null
+        //     }
+        //     return req.headers.authorization.split(' ')[1]; // Bearer <token>)
+        // };
+        // const options = {
+        //     expiresIn: '2d',
+        //     issuer: 'shuji watanabe'
+        // };
+        // // verify makes sure that the token hasn't expired and has been issued by us
+        // let decoded = null
+        // try {
+        //     decoded = jwt.verify(token(), process.env.JWT_SECRET, options);
+        // } catch {
 
-        }
-        let user_id = null
-        if (decoded) {
-            user_id = decoded.user._id
-        }
+        // }
+        // let user_id = null
+        // if (decoded) {
+        //     user_id = decoded.user._id
+        // }
         try {
             const page = req.query.page || 1
             // console.log('req.query.sort', req.query.sort)
@@ -116,19 +119,13 @@ module.exports = {
                         "as": "tags"
                     }
                 },
-                {
-                    "$addFields": {
-                        "isFavorite": {
-                            "$size": {
-                                "$filter": {
-                                    "input": "$likes",
-                                    "as": "item",
-                                    "cond": { "$eq": ["$$item", ObjectId(user_id)] }
-                                }
-                            }
-                        }
-                    }
-                },
+                // {
+                //     "$match": {
+                //         "tags._id": {
+                //             "$exists": true
+                //         }
+                //     }
+                // },
                 //sort 
                 {
                     '$sort': {
@@ -206,21 +203,21 @@ module.exports = {
             next(e)
         }
     },
-    deleteTags: async (req, res, next) => {
-        try {
-            const user = await User.findById(req.decoded.user._id)
-            const { _id, tags } = req.body
-            const tag_ids = tags.map(tag => tag._id)
-            const article = await Article.findOneAndUpdate(
-                { _id: _id, user: user._id },
-                { $pullAll: { tags: tag_ids } },
-                { new: true }
-            )
-            res.json(article)
-        } catch (e) {
-            next(e)
-        }
-    },
+    // deleteTags: async (req, res, next) => {
+    //     try {
+    //         const user = await User.findById(req.decoded.user._id)
+    //         const { _id, tags } = req.body
+    //         const tag_ids = tags.map(tag => tag._id)
+    //         const article = await Article.findOneAndUpdate(
+    //             { _id: _id, user: user._id },
+    //             { $pullAll: { tags: tag_ids } },
+    //             { new: true }
+    //         )
+    //         res.json(article)
+    //     } catch (e) {
+    //         next(e)
+    //     }
+    // },
     updateTag: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
@@ -236,7 +233,7 @@ module.exports = {
             next(e)
         }
     },
-    addLikes: async (req, res, next) => {
+    likes: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
             const { _id, likes } = req.body
@@ -246,36 +243,40 @@ module.exports = {
             }, update, {
                 new: true,
             })
-            const stages = [
-                {
-                    "$match": {
-                        _id: article._id
-                    }
-                },
-                {
-                    "$lookup": {
-                        "from": 'tags',
-                        "localField": "tags",
-                        "foreignField": "_id",
-                        "as": "tags"
-                    }
-                },
-                {
-                    "$addFields": {
-                        "isFavorite": {
-                            "$size": {
-                                "$filter": {
-                                    "input": "$likes",
-                                    "as": "item",
-                                    "cond": { "$eq": ["$$item", ObjectId(user._id)] }
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
-            const updatedArticle = await Article.aggregate(stages)
-            res.json(updatedArticle)
+            const populated = await Article.findById(_id).populate('tags')
+            res.json(populated)
+        } catch (e) {
+            next(e)
+        }
+    },
+    good: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { _id, good } = req.body
+            const update = good ? { $addToSet: { good: user._id }, $pull: { bad: user._id } } : { $pull: { good: user._id } }
+            const article = await Article.findOneAndUpdate({
+                _id: _id,
+            }, update, {
+                new: true,
+            })
+            const populated = await Article.findById(_id).populate('tags')
+            res.json(populated)
+        } catch (e) {
+            next(e)
+        }
+    },
+    bad: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { _id, bad } = req.body
+            const update = bad ? { $addToSet: { bad: user._id }, $pull: { good: user._id } } : { $pull: { bad: user._id } }
+            const article = await Article.findOneAndUpdate({
+                _id: _id,
+            }, update, {
+                new: true,
+            })
+            const populated = await Article.findById(_id).populate('tags')
+            res.json(populated)
         } catch (e) {
             next(e)
         }
@@ -312,7 +313,6 @@ module.exports = {
         try {
             const { article } = req.query
             console.log('article', article)
-            // // Comment.find()
             const result = await Comment.find({ article: article, parent: null })
             res.json(result)
         } catch (e) {
