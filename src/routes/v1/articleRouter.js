@@ -44,4 +44,8 @@ router.post('/likes', validateToken, articleController.addLikes)
 
 router.put('/tag', validateToken, articleController.updateTag)
 
+router.get('/comment', articleController.getComment)
+
+router.post('/comment', validateToken, articleController.addComment)
+
 module.exports = router
