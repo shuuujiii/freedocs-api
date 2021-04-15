@@ -1,9 +1,9 @@
 // In this file you can configure migrate-mongo
-
+const stage = require('./configs/config')[environment];
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
-    url: "mongodb://localhost/freedocs_local",
+    url: stage.dbUri,
 
     // TODO Change this to your database name:
     // databaseName: "YOURDATABASENAME",
