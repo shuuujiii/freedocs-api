@@ -21,15 +21,18 @@ let ArticleSchema = new mongoose.Schema(
         },
         likes: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'User',
+            default: [],
         }],
         good: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'User',
+            default: [],
         }],
         bad: [{
             type: mongoose.Schema.Types.ObjectId,
-            ref: 'User'
+            ref: 'User',
+            default: [],
         }]
     }
 )
