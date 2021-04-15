@@ -1,5 +1,10 @@
 // In this file you can configure migrate-mongo
-const stage = require('./configs/config')[environment];
+require('dotenv').config()
+
+const environment = process.env.NODE_ENV;
+console.log('env', environment)
+const stage = require('./config')[environment];
+console.log('stage', stage)
 const config = {
   mongodb: {
     // TODO Change (or review) the url to your MongoDB:
