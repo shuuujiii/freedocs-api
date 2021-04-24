@@ -7,7 +7,7 @@
     "dev": "clear && cross-env NODE_ENV=development DEBUG=appFreeDocs nodemon ./src/bin/www",
     "alltest": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
     "test": "cross-env NODE_ENV=test mocha --timeout 10000",
-    "heroku-postbuild": "yarn run migrate-mongo up -f './src/configs/migrate-mongo-config.js'",
+    "heroku-prebuild": "yarn run migrate-mongo up -f './src/configs/migrate-mongo-config.js'",
     "migrate": "yarn run migrate-mongo -f './src/configs/migrate-mongo-config.js",
     "deleteall": "cross-env NODE_ENV=development node ./src/seed/deleteall.js",
     "seed": "cross-env NODE_ENV=development node ./src/seed/seed.js",
