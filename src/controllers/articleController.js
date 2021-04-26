@@ -147,6 +147,19 @@ module.exports = {
                         "as": "tags"
                     }
                 },
+                {
+                    "$project": {
+                        'url': 1,
+                        'user': 1,
+                        'good': 1,
+                        'bad': 1,
+                        'likes': 1,
+                        'tags': 1,
+                        'likeCount': { $size: "$likes" },
+                        'goodCount': { $size: '$good' },
+                        'badCount': { $size: '$bad' }
+                    }
+                },
                 //sort 
                 {
                     '$sort': {
