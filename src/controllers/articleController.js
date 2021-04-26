@@ -68,12 +68,31 @@ module.exports = {
                 //         }
                 //     }
                 // },
+
+                {
+                    "$project": {
+                        'url': 1,
+                        'user': 1,
+                        'good': 1,
+                        'bad': 1,
+                        'likes': 1,
+                        'tags': 1,
+                        'likeCount': { $size: "$likes" },
+                        'goodCount': { $size: '$good' },
+                        'badCount': { $size: '$bad' }
+                    }
+                },
                 //sort 
                 {
                     '$sort': {
                         [sortKey]: order
                     }
                 },
+                // {
+                //     '$sort': {
+                //         ['likeCount']: -1
+                //     }
+                // },
             ]
             if (req.query.search) {
                 let resampe = new RegExp(req.query.search, 'i');
@@ -86,6 +105,8 @@ module.exports = {
                     }
                 })
             }
+
+
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
@@ -112,7 +133,6 @@ module.exports = {
                 return 1
             })(req.query.order)
             const isFavorite = req.query.isFavoriteOnly
-            console.log('isFavorite from query:', isFavorite)
             const pagingOptions = {
                 page: page,
                 limit: 10,
@@ -317,7 +337,6 @@ module.exports = {
     getComment: async (req, res, next) => {
         try {
             const { article } = req.query
-            console.log('article', article)
             const result = await Comment.find({ article: article, parent: null })
             res.json(result)
         } catch (e) {
