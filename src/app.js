@@ -26,10 +26,10 @@ app.use(cors({
   }
 }));
 
-//basic auth
-// if (environment === 'staging') {
-//   app.use(basicAuth)
-// }
+// basic auth
+if (environment === 'staging') {
+  app.use(basicAuth)
+}
 
 // cookie
 app.use(cookieParser())
@@ -64,7 +64,6 @@ if (environment === 'development') {
 }
 // test
 app.get('/api/v1/test', function (req, res) {
-  console.log(whitelist)
   console.log('[test] session', req.session)
   res.send('hello world')
 })
