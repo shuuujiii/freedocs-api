@@ -39,8 +39,7 @@ const validateParam = async (req, res, next) => {
 router.post('/', validateToken, validateParam, articleController.create)
 
 router.get('/all', articleController.readall)
-
-router.get('/', validateToken, articleController.read)
+router.get('/user', validateToken, articleController.user)
 
 router.put('/', validateToken, validateParam, articleController.update)
 
