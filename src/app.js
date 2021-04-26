@@ -27,9 +27,9 @@ app.use(cors({
 }));
 
 //basic auth
-if (environment === 'staging') {
-  app.use(basicAuth)
-}
+// if (environment === 'staging') {
+//   app.use(basicAuth)
+// }
 
 // cookie
 app.use(cookieParser())
