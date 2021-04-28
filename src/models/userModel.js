@@ -11,6 +11,10 @@ var UserSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
+        email: {
+            type: String,
+            trim: true,
+        },
         admin: {
             type: Boolean,
             default: false,

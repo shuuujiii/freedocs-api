@@ -1,20 +1,26 @@
 const User = require('../models/userModel');
 const Article = require('../models/articleModel');
 const Tag = require('../models/tagModel');
-const UserValidator = require('../middlewares/validator/userValidator');
+// const UserValidator = require('../middlewares/validator/userValidator');
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const { AppError } = require('../utils/appError');
 const environment = process.env.NODE_ENV;
 const stage = require('../configs/config.js')[environment];
 const jwt = require('jsonwebtoken');
-
+const Joi = require('joi')
+const UserValidator = Joi.object().keys({
+    username: Joi.string().alphanum().min(3).max(30).required(),
+    password: Joi.string().regex(/^[a-zA-Z0-9]{8,30}$/),
+    email: Joi.string().email().allow(''),
+    admin: Joi.boolean(),
+}).with('username', 'password')
 module.exports = {
     create: async (req, res, next) => {
         try {
-            const { username, password } = req.body
+            const { username, password, email } = req.body
             // validate parameter
-            await UserValidator.validateAsync({ username: username, password: password })
+            await UserValidator.validateAsync({ username: username, password: password, email: email })
                 .catch(err => {
                     throw new AppError(err.name, StatusCodes.BAD_REQUEST, err.message, true)
                 });
@@ -28,6 +34,7 @@ module.exports = {
             // create user
             const user = await User.create({
                 username: username,
+                email: email,
                 password: bcrypt.hashSync(password, stage.saltingRounds),
             })
 
