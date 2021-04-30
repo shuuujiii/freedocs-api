@@ -8,6 +8,7 @@ const { AppError } = require('../utils/appError');
 const environment = process.env.NODE_ENV;
 const stage = require('../configs/config.js')[environment];
 const jwt = require('jsonwebtoken');
+const mail = require('../utils/sendMail')
 const Joi = require('joi')
 const UserValidator = Joi.object().keys({
     username: Joi.string().alphanum().min(3).max(30).required(),
@@ -47,10 +48,12 @@ module.exports = {
                 issuer: 'shuji watanabe'
             }
             const token = jwt.sign(payload, process.env.JWT_SECRET, options)
-            // res.cookie('token', token, { httpOnly: true });
             req.session.token = token;
             req.session.user = user;
-
+            if (process.env.NODE_ENV !== 'development') {
+                const emailtoken = jwt.sign(payload, process.env.EMAIL_SECRET, options)
+                mail.sendMail(email, emailtoken)
+            }
             res.status(StatusCodes.CREATED)
                 .json({ username: user.username })
         } catch (e) {
@@ -183,5 +186,21 @@ module.exports = {
             next(e)
         }
         // res.json('authenticated')
+    },
+    authEmail: async (req, res, next) => {
+        const options = {
+            expiresIn: '2d',
+            issuer: 'shuji watanabe'
+        }
+        try {
+            const { token } = req.body
+            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, options)
+            const updateUser = await User.findOneAndUpdate({ _id: decoded.user._id }, {
+                authEmail: true
+            }, { new: true })
+            res.json({ message: 'email authenticated' })
+        } catch (e) {
+            next(e)
+        }
     }
 }
