@@ -1,7 +1,5 @@
 const User = require('../models/userModel');
 const Article = require('../models/articleModel');
-const Tag = require('../models/tagModel');
-// const UserValidator = require('../middlewares/validator/userValidator');
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const { AppError } = require('../utils/appError');
@@ -170,6 +168,7 @@ module.exports = {
     silent: async (req, res, next) => {
         try {
             // if (!req.decoded) { return res.json('no token') }
+            console.log('req.decoded', req.decoded.user)
             const payload = {
                 user: req.decoded ? req.decoded.user : null
             }
@@ -202,5 +201,74 @@ module.exports = {
         } catch (e) {
             next(e)
         }
-    }
+    },
+    changePassword: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { oldPassword, newPassword } = req.body;
+            // find user
+            if (user === null) {
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
+            }
+
+            // compare password
+            const match = await bcrypt.compare(oldPassword, user.password)
+            if (!match) {
+                throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'password not matched', true)
+            }
+
+            const update = await User.updateOne({ _id: user._id }, { password: bcrypt.hashSync(newPassword, stage.saltingRounds) }, { new: true })
+
+            // authenticated
+            const payload = {
+                user: update
+            }
+            const options = {
+                expiresIn: '2d',
+                issuer: 'shuji watanabe'
+            }
+            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            req.session.token = token;
+            req.session.user = user;
+            res.json({
+                message: 'password changed'
+            })
+        } catch (e) {
+            next(e)
+        }
+    },
+    changeEmail: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { email } = req.body;
+            // find user
+            if (user === null) {
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
+            }
+
+            const update = await User.findOneAndUpdate(
+                { _id: user._id },
+                { email: email, authEmail: false },
+                { new: true })
+
+            // authenticated
+            const payload = {
+                user: update
+            }
+            const options = {
+                expiresIn: '2d',
+                issuer: 'shuji watanabe'
+            }
+            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            req.session.token = token;
+            req.session.user = user;
+            if (process.env.NODE_ENV !== 'development') {
+                const emailtoken = jwt.sign(payload, process.env.EMAIL_SECRET, options)
+                mail.sendMail(email, emailtoken)
+            }
+            res.json(update)
+        } catch (e) {
+            next(e)
+        }
+    },
 }
