@@ -168,7 +168,6 @@ module.exports = {
     silent: async (req, res, next) => {
         try {
             // if (!req.decoded) { return res.json('no token') }
-            console.log('req.decoded', req.decoded.user)
             const payload = {
                 user: req.decoded ? req.decoded.user : null
             }

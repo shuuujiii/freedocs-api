@@ -118,6 +118,7 @@ module.exports = {
     user: async (req, res, next) => {
         try {
             const user = req.decoded.user
+            console.log('user', user)
             const page = req.query.page || 1
             const sortKey = req.query.sortkey || 'url'
             const order = (function (order) {
