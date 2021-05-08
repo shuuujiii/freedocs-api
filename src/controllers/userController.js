@@ -14,6 +14,34 @@ const UserValidator = Joi.object().keys({
     email: Joi.string().email().allow(''),
     admin: Joi.boolean(),
 }).with('username', 'password')
+
+const defaultOptions = {
+    expiresIn: '2d',
+    issuer: 'shuji watanabe'
+}
+
+const defaultEmailOptions = {
+    expiresIn: '2d',
+    issuer: 'shuji watanabe'
+}
+
+const createToken = (payload, options = defaultOptions) => {
+    return jwt.sign(payload, process.env.JWT_SECRET, options)
+}
+
+const createEmailToken = (payload, options = defaultEmailOptions) => {
+    return jwt.sign(payload, process.env.EMAIL_SECRET, options)
+}
+
+const getPayloadUser = (user) => {
+    return {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        authEmail: user.authEmail,
+        admin: user.admin,
+    }
+}
 module.exports = {
     create: async (req, res, next) => {
         try {
@@ -38,48 +66,17 @@ module.exports = {
             })
 
             // authenticated
-            const payload = {
-                user: user
-            }
-            const options = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const payload = { user: getPayloadUser(user) }
+
+            const token = createToken(payload)
             req.session.token = token;
-            req.session.user = user;
+            // req.session.user = user;
             if (process.env.NODE_ENV !== 'development') {
-                const emailtoken = jwt.sign(payload, process.env.EMAIL_SECRET, options)
+                const emailtoken = createEmailToken(payload)
                 mail.sendMail(email, emailtoken)
             }
             res.status(StatusCodes.CREATED)
-                .json({ username: user.username })
-        } catch (e) {
-            next(e)
-        }
-    },
-    read: async (req, res, next) => {
-        try {
-            // check authenticate user
-            // if (req.decoded.user.username !== req.query.username) {
-            //     throw new AppError('AppError', StatusCodes.UNAUTHORIZED, 'not authorized', true)
-            // }
-
-            // find user
-            const user = await User.findOne({
-                username: req.decoded.user.username
-            })
-
-            // console.log('username', req.decoded.user.username)
-            // console.log('user is', user)
-
-            // check user exist
-            if (user === null) {
-                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user not found', true)
-            }
-
-            // response
-            res.json({ username: user.username })
+                .json(payload)
         } catch (e) {
             next(e)
         }
@@ -127,21 +124,11 @@ module.exports = {
             }
 
             // authenticated
-            const payload = {
-                user: user
-            }
-            const options = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const payload = { user: getPayloadUser(user) }
+            const token = createToken(payload)
             req.session.token = token;
-            req.session.user = user;
-            res.json({
-                payload: payload,
-                options: options,
-                token: token
-            })
+            // req.session.user = user;
+            res.json(payload)
 
         } catch (e) {
             next(e)
@@ -151,48 +138,25 @@ module.exports = {
         req.session.destroy();
         res.clearCookie('connect.sid', { path: '/' }).status(StatusCodes.OK).json({ message: 'logout' })
     },
-    authenticate: async (req, res, next) => {
-        const payload = {
-            user: req.session.user
-        }
-        const options = {
-            expiresIn: '2d',
-            issuer: 'shuji watanabe'
-        }
-
-        req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
-        res.json({
-            payload: payload,
-        })
-    },
     silent: async (req, res, next) => {
         try {
-            // if (!req.decoded) { return res.json('no token') }
             const payload = {
-                user: req.decoded ? req.decoded.user : null
+                user: req.decoded ? getPayloadUser(req.decoded.user) : null
             }
-            const options = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-
-            req.session.token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const token = createToken(payload)
+            req.session.token = token
             res.json({
                 payload: payload,
             })
         } catch (e) {
             next(e)
         }
-        // res.json('authenticated')
     },
     authEmail: async (req, res, next) => {
-        const options = {
-            expiresIn: '2d',
-            issuer: 'shuji watanabe'
-        }
+
         try {
             const { token } = req.body
-            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, options)
+            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, emailOptions)
             const updateUser = await User.findOneAndUpdate({ _id: decoded.user._id }, {
                 authEmail: true
             }, { new: true })
@@ -216,19 +180,14 @@ module.exports = {
                 throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'password not matched', true)
             }
 
-            const update = await User.updateOne({ _id: user._id }, { password: bcrypt.hashSync(newPassword, stage.saltingRounds) }, { new: true })
-
+            const update = await User.findOneAndUpdate({ _id: user._id }, { password: bcrypt.hashSync(newPassword, stage.saltingRounds) }, { new: true })
             // authenticated
             const payload = {
-                user: update
+                user: getPayloadUser(update)
             }
-            const options = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const token = createToken(payload)
             req.session.token = token;
-            req.session.user = user;
+            // req.session.user = user;
             res.json({
                 message: 'password changed'
             })
@@ -252,20 +211,16 @@ module.exports = {
 
             // authenticated
             const payload = {
-                user: update
+                user: getPayloadUser(update)
             }
-            const options = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const token = jwt.sign(payload, process.env.JWT_SECRET, options)
+            const token = createToken(payload)
             req.session.token = token;
-            req.session.user = user;
+            // req.session.user = user;
             if (process.env.NODE_ENV !== 'development') {
-                const emailtoken = jwt.sign(payload, process.env.EMAIL_SECRET, options)
+                const emailtoken = createEmailToken(payload)
                 mail.sendMail(email, emailtoken)
             }
-            res.json(update)
+            res.json(payload)
         } catch (e) {
             next(e)
         }
