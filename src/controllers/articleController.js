@@ -11,6 +11,10 @@ module.exports = {
         try {
             const { url, tags, description } = req.body
             const user = await User.findById(req.decoded.user._id)
+            const findArticle = await Article.findOne({ url: url }).lean()
+            if (findArticle) {
+                throw new AppError('AppError', StatusCodes.CONFLICT, 'sorry! this URL already exists', true)
+            }
             const article = await Article.create({
                 url: url,
                 description: description,
