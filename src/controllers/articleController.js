@@ -360,5 +360,45 @@ module.exports = {
         } catch (e) {
             next(e)
         }
+    },
+    getRank: async (req, res, next) => {
+        try {
+            const likesRanking = await Article.aggregate([
+                {
+                    "$project": {
+                        "_id": 1,
+                        "url": 1,
+                        'count': { $size: "$likes" },
+                        // "goodCount": {"$size":"good"}
+                    }
+                },
+                {
+                    "$sort": {
+                        "count": -1
+                    }
+                }, {
+                    "$limit": 3
+                }
+            ])
+            const goodRanking = await Article.aggregate([
+                {
+                    "$project": {
+                        "_id": 1,
+                        "url": 1,
+                        'count': { $size: "$good" },
+                    }
+                },
+                {
+                    "$sort": {
+                        "count": -1
+                    }
+                }, {
+                    "$limit": 3
+                }
+            ])
+            res.json({ likesRanking: likesRanking, goodRanking: goodRanking })
+        } catch (e) {
+            next(e)
+        }
     }
 }

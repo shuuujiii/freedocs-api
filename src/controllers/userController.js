@@ -34,6 +34,7 @@ const createEmailToken = (payload, options = defaultEmailOptions) => {
 }
 
 const getPayloadUser = (user) => {
+    if (!user) return null;
     return {
         _id: user._id,
         username: user.username,
@@ -140,6 +141,7 @@ module.exports = {
     },
     silent: async (req, res, next) => {
         try {
+            console.log('silent req.decoded', req.decoded)
             const payload = {
                 user: req.decoded ? getPayloadUser(req.decoded.user) : null
             }
