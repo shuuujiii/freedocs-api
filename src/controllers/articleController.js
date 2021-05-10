@@ -119,10 +119,9 @@ module.exports = {
             next(e)
         }
     },
-    user: async (req, res, next) => {
+    lists: async (req, res, next) => {
         try {
-            const user = req.decoded.user
-            console.log('user', user)
+            // const user = req.decoded.user
             const page = req.query.page || 1
             const sortKey = req.query.sortkey || 'url'
             const order = (function (order) {
@@ -137,7 +136,7 @@ module.exports = {
                 }
                 return 1
             })(req.query.order)
-            const isFavorite = req.query.isFavoriteOnly
+            // const isFavorite = req.query.isFavoriteOnly
             const pagingOptions = {
                 page: page,
                 limit: 10,
@@ -184,9 +183,9 @@ module.exports = {
                 })
             }
             // favorite
-            if (isFavorite === 'true') {
-                stages.push({ "$match": { 'likes': { "$in": [ObjectId(user._id)] } } })
-            }
+            // if (isFavorite === 'true') {
+            //     stages.push({ "$match": { 'likes': { "$in": [ObjectId(user._id)] } } })
+            // }
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
