@@ -29,19 +29,51 @@ const lookupGood = [{
     $unwind: '$good',
 },]
 
-const lookupTag = {
-    $lookup: {
-        from: 'tags',
-        localField: "tags",
-        foreignField: "_id",
-        as: "tags"
-    }
-}
+// const lookupTag = [
+//     { $unwind: '$tags' },
+//     {
+//         $lookup: {
+//             from: 'tags',
+//             localField: "tags._id",
+//             foreignField: "_id",
+//             as: "tags.info"
+//         }
+//     },
+//     { $unwind: '$tags.info' },
+//     {
+//         $group: {
+//             _id: '$_id',
+//             root: { $mergeObjects: '$$ROOT' },
+//             tags: { $push: '$tags' }
+//         }
+//     },
+//     {
+//         $replaceRoot: {
+//             newRoot: {
+//                 $mergeObjects: ['$root', '$$ROOT']
+//             }
+//         }
+//     }
+// ]
+
+const lookupTag = [
+    {
+        $lookup: {
+            from: 'tags',
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags"
+        }
+    },
+
+]
 
 const articleProject = {
     $project: {
+        // root: 1,
         'url': 1,
         'user': 1,
+        'description': 1,
         'good': "$good.users",
         'likes': "$like.users",
         'tags': 1,
@@ -80,7 +112,7 @@ const getBaseAggregateStage = (sortKey, order, search) => {
     let base = [
         ...lookupLikes,
         ...lookupGood,
-        lookupTag,
+        ...lookupTag,
         articleProject,
         aggregateSort(sortKey, order)
     ]
@@ -101,7 +133,7 @@ const getAggregateStageById = (_id) => {
         matchId,
         ...lookupLikes,
         ...lookupGood,
-        lookupTag,
+        ...lookupTag,
         articleProject,
     ]
 
@@ -117,12 +149,12 @@ module.exports = {
             if (findArticle) {
                 throw new AppError('AppError', StatusCodes.CONFLICT, 'sorry! this URL already exists', true)
             }
+            const mapped = tags.map(tag => { return { locked: true, _id: tag } })
             const article = await Article.create({
                 url: url,
                 description: description,
-                tags: tags,
+                tags: mapped,
                 user: user._id,
-                bad: [],
             })
             const l = await Likes.create({
                 users: [],
@@ -170,6 +202,46 @@ module.exports = {
             next(e)
         }
     },
+    mylist: async (req, res, next) => {
+        try {
+            // const user = req.decoded.user
+            const page = req.query.page || 1
+            const sortKey = req.query.sortkey || 'url'
+            const order = (function (order) {
+                if (!order) {
+                    return 1
+                }
+                if (order === 'asc') {
+                    return 1
+                }
+                if (order === 'desc') {
+                    return -1
+                }
+                return 1
+            })(req.query.order)
+            // const isFavorite = req.query.isFavoriteOnly
+            const pagingOptions = {
+                page: page,
+                limit: 10,
+            };
+
+            const base = getBaseAggregateStage(sortKey, order, req.query.search)
+            const stages = [
+                {
+                    $match: {
+                        "user": ObjectId(req.decoded.user._id)
+                    }
+                },
+                ...base,
+            ]
+            const articleAggregate = Article.aggregate(stages)
+            const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
+            // return
+            res.status(StatusCodes.OK).json(paginated)
+        } catch (e) {
+            next(e)
+        }
+    },
     update: async (req, res, next) => {
         try {
             const { _id, url, tags, description } = req.body
@@ -187,8 +259,11 @@ module.exports = {
             if (!article) {
                 throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
             }
-            const populated = await Article.findById(article._id).populate('tags')
-            res.json(populated)
+            const stage = getAggregateStageById(article._id)
+            const populated = await Article.aggregate(stage)
+            res.json(populated[0])
+            // const populated = await Article.findById(article._id).populate('tags')
+            // res.json(populated)
         } catch (e) {
             next(e)
         }
@@ -196,10 +271,9 @@ module.exports = {
     delete: async (req, res, next) => {
         try {
             const { _id } = req.body
-            const user = await User.findById(req.decoded.user._id)
-            const article = await Article.deleteOne({
+            const article = await Article.findOneAndRemove({
                 _id: _id,
-                user: user._id
+                user: req.decoded.user._id
             })
             res.json(article)
         } catch (e) {
