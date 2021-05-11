@@ -1,11 +1,113 @@
 const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
+const Likes = require('../models/likesModel')
+const Good = require('../models/goodModel')
 const User = require('../models/userModel')
 const Comment = require('../models/commentModel')
 const { AppError } = require('../utils/appError')
 const ObjectId = require('mongoose').Types.ObjectId;
 const jwt = require('jsonwebtoken');
+const lookupLikes = [{
+    $lookup: {
+        from: 'likes',
+        localField: "_id",
+        foreignField: "article",
+        as: "like"
+    }
+}, {
+    $unwind: '$like',
+},]
 
+const lookupGood = [{
+    $lookup: {
+        from: 'goods',
+        localField: "_id",
+        foreignField: "article",
+        as: "good"
+    }
+}, {
+    $unwind: '$good',
+},]
+
+const lookupTag = {
+    $lookup: {
+        from: 'tags',
+        localField: "tags",
+        foreignField: "_id",
+        as: "tags"
+    }
+}
+
+const articleProject = {
+    $project: {
+        'url': 1,
+        'user': 1,
+        'good': "$good.users",
+        'likes': "$like.users",
+        'tags': 1,
+        'likeCount': { $size: "$like.users" },
+        'goodCount': { $size: '$good.users' },
+    }
+}
+
+const aggregateLimit = (limit) => {
+    return {
+        $limit: limit
+    }
+}
+
+const aggregateSort = (sortKey, order) => {
+    return {
+        $sort: {
+            [sortKey]: order
+        }
+    }
+}
+
+const aggregateSearch = (search) => {
+    let resampe = new RegExp(search, 'i');
+    return {
+        $match: {
+            $or: [
+                { "tags.name": { "$all": [resampe] } },
+                { "url": resampe },
+            ]
+        }
+    }
+}
+
+const getBaseAggregateStage = (sortKey, order, search) => {
+    let base = [
+        ...lookupLikes,
+        ...lookupGood,
+        lookupTag,
+        articleProject,
+        aggregateSort(sortKey, order)
+    ]
+    if (search) {
+        base.push(aggregateSearch(search))
+    }
+
+    return base
+}
+
+const getAggregateStageById = (_id) => {
+    const matchId = {
+        $match: {
+            "_id": ObjectId(_id)
+        }
+    }
+    let stage = [
+        matchId,
+        ...lookupLikes,
+        ...lookupGood,
+        lookupTag,
+        articleProject,
+    ]
+
+    return stage
+
+}
 module.exports = {
     create: async (req, res, next) => {
         try {
@@ -20,101 +122,18 @@ module.exports = {
                 description: description,
                 tags: tags,
                 user: user._id,
-                likes: [],
-                good: [],
                 bad: [],
+            })
+            const l = await Likes.create({
+                users: [],
+                article: article._id,
+            })
+            const g = await Good.create({
+                users: [],
+                article: article._id,
             })
             const populated = await Article.findById(article._id).populate('tags')
             res.json(populated)
-        } catch (e) {
-            next(e)
-        }
-    },
-    readall: async (req, res, next) => {
-        try {
-            const user = req.decoded && req.decoded.user
-            console.log('decoded', req.decoded, user)
-            const page = req.query.page || 1
-            // console.log('req.query.sort', req.query.sort)
-            const sortKey = req.query.sortkey || 'url'
-            const order = (function (order) {
-                if (!order) {
-                    return 1
-                }
-                if (order === 'asc') {
-                    return 1
-                }
-                if (order === 'desc') {
-                    return -1
-                }
-                return 1
-            })(req.query.order)
-            const isFavorite = req.query.isFavoriteOnly
-            console.log('isFav:', isFavorite)
-            const pagingOptions = {
-                page: page,
-                limit: 10,
-            };
-
-            const stages = [
-                {
-                    "$lookup": {
-                        "from": 'tags',
-                        "localField": "tags",
-                        "foreignField": "_id",
-                        "as": "tags"
-                    }
-                },
-                // {
-                //     "$match": {
-                //         "tags._id": {
-                //             "$exists": true
-                //         }
-                //     }
-                // },
-
-                {
-                    "$project": {
-                        'url': 1,
-                        'user': 1,
-                        'good': 1,
-                        'bad': 1,
-                        'likes': 1,
-                        'tags': 1,
-                        'likeCount': { $size: "$likes" },
-                        'goodCount': { $size: '$good' },
-                        'badCount': { $size: '$bad' }
-                    }
-                },
-                //sort 
-                {
-                    '$sort': {
-                        [sortKey]: order
-                    }
-                },
-                // {
-                //     '$sort': {
-                //         ['likeCount']: -1
-                //     }
-                // },
-            ]
-            if (req.query.search) {
-                let resampe = new RegExp(req.query.search, 'i');
-                stages.push({
-                    "$match": {
-                        "$or": [
-                            { "tags.name": { "$all": [resampe] } },
-                            { "url": resampe },
-                        ]
-                    }
-                })
-            }
-
-
-            const articleAggregate = Article.aggregate(stages)
-            const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
-            // return
-            res.status(StatusCodes.OK).json(paginated)
         } catch (e) {
             next(e)
         }
@@ -142,50 +161,7 @@ module.exports = {
                 limit: 10,
             };
 
-            const stages = [
-                {
-                    "$lookup": {
-                        "from": 'tags',
-                        "localField": "tags",
-                        "foreignField": "_id",
-                        "as": "tags"
-                    }
-                },
-                {
-                    "$project": {
-                        'url': 1,
-                        'user': 1,
-                        'good': 1,
-                        'bad': 1,
-                        'likes': 1,
-                        'tags': 1,
-                        'likeCount': { $size: "$likes" },
-                        'goodCount': { $size: '$good' },
-                        'badCount': { $size: '$bad' }
-                    }
-                },
-                //sort 
-                {
-                    '$sort': {
-                        [sortKey]: order
-                    }
-                },
-            ]
-            if (req.query.search) {
-                let resampe = new RegExp(req.query.search, 'i');
-                stages.push({
-                    "$match": {
-                        "$or": [
-                            { "tags.name": { "$all": [resampe] } },
-                            { "url": resampe },
-                        ]
-                    }
-                })
-            }
-            // favorite
-            // if (isFavorite === 'true') {
-            //     stages.push({ "$match": { 'likes': { "$in": [ObjectId(user._id)] } } })
-            // }
+            const stages = getBaseAggregateStage(sortKey, order, req.query.search)
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
@@ -245,21 +221,6 @@ module.exports = {
             next(e)
         }
     },
-    // deleteTags: async (req, res, next) => {
-    //     try {
-    //         const user = await User.findById(req.decoded.user._id)
-    //         const { _id, tags } = req.body
-    //         const tag_ids = tags.map(tag => tag._id)
-    //         const article = await Article.findOneAndUpdate(
-    //             { _id: _id, user: user._id },
-    //             { $pullAll: { tags: tag_ids } },
-    //             { new: true }
-    //         )
-    //         res.json(article)
-    //     } catch (e) {
-    //         next(e)
-    //     }
-    // },
     updateTag: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
@@ -279,14 +240,15 @@ module.exports = {
         try {
             const user = await User.findById(req.decoded.user._id)
             const { _id, likes } = req.body
-            const update = likes ? { $addToSet: { likes: user._id } } : { $pull: { likes: user._id } }
-            const article = await Article.findOneAndUpdate({
-                _id: _id,
+            const update = likes ? { $addToSet: { users: user._id } } : { $pull: { users: user._id } }
+            const l = await Likes.findOneAndUpdate({
+                article: _id,
             }, update, {
-                new: true,
+                upsert: true, new: true, setDefaultsOnInsert: true
             })
-            const populated = await Article.findById(_id).populate('tags')
-            res.json(populated)
+            const stage = getAggregateStageById(_id)
+            const populated = await Article.aggregate(stage)
+            res.json(populated[0])
         } catch (e) {
             next(e)
         }
@@ -295,30 +257,15 @@ module.exports = {
         try {
             const user = await User.findById(req.decoded.user._id)
             const { _id, good } = req.body
-            const update = good ? { $addToSet: { good: user._id }, $pull: { bad: user._id } } : { $pull: { good: user._id } }
-            const article = await Article.findOneAndUpdate({
-                _id: _id,
+            const update = good ? { $addToSet: { users: user._id } } : { $pull: { users: user._id } }
+            const article = await Good.findOneAndUpdate({
+                article: _id,
             }, update, {
-                new: true,
+                upsert: true, new: true, setDefaultsOnInsert: true
             })
-            const populated = await Article.findById(_id).populate('tags')
-            res.json(populated)
-        } catch (e) {
-            next(e)
-        }
-    },
-    bad: async (req, res, next) => {
-        try {
-            const user = await User.findById(req.decoded.user._id)
-            const { _id, bad } = req.body
-            const update = bad ? { $addToSet: { bad: user._id }, $pull: { good: user._id } } : { $pull: { bad: user._id } }
-            const article = await Article.findOneAndUpdate({
-                _id: _id,
-            }, update, {
-                new: true,
-            })
-            const populated = await Article.findById(_id).populate('tags')
-            res.json(populated)
+            const stage = getAggregateStageById(_id)
+            const populated = await Article.aggregate(stage)
+            res.json(populated[0])
         } catch (e) {
             next(e)
         }
@@ -363,37 +310,28 @@ module.exports = {
     getRank: async (req, res, next) => {
         try {
             const likesRanking = await Article.aggregate([
+                ...lookupLikes,
                 {
                     "$project": {
                         "_id": 1,
                         "url": 1,
-                        'count': { $size: "$likes" },
-                        // "goodCount": {"$size":"good"}
+                        'count': { $size: "$like.users" },
                     }
                 },
-                {
-                    "$sort": {
-                        "count": -1
-                    }
-                }, {
-                    "$limit": 3
-                }
+                aggregateSort('count', -1),
+                aggregateLimit(3),
             ])
             const goodRanking = await Article.aggregate([
+                ...lookupGood,
                 {
                     "$project": {
                         "_id": 1,
                         "url": 1,
-                        'count': { $size: "$good" },
+                        'count': { $size: "$good.users" },
                     }
                 },
-                {
-                    "$sort": {
-                        "count": -1
-                    }
-                }, {
-                    "$limit": 3
-                }
+                aggregateSort('count', -1),
+                aggregateLimit(3),
             ])
             res.json({ likesRanking: likesRanking, goodRanking: goodRanking })
         } catch (e) {

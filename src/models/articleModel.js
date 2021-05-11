@@ -11,6 +11,14 @@ let ArticleSchema = new mongoose.Schema(
             type: String,
         },
         tags: [{
+            // _id: {
+            //     type: mongoose.Schema.Types.ObjectId,
+            //     ref: 'Tag'
+            // },
+            // locked: {
+            //     type: Boolean,
+            //     default: false,
+            // }
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Tag'
         }],
@@ -19,21 +27,6 @@ let ArticleSchema = new mongoose.Schema(
             ref: 'User',
             require: true,
         },
-        likes: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            default: [],
-        }],
-        good: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            default: [],
-        }],
-        bad: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            default: [],
-        }]
     }
 )
 
