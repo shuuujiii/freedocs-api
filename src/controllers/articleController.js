@@ -68,11 +68,24 @@ const lookupTag = [
 
 ]
 
+
+const lookupAuthorName = [{
+    $lookup: {
+        from: 'users',
+        localField: "user",
+        foreignField: "_id",
+        as: "author"
+    }
+}, {
+    $unwind: '$author',
+},]
+
 const articleProject = {
     $project: {
         // root: 1,
         'url': 1,
         'user': 1,
+        'author': '$author.username',
         'description': 1,
         'good': "$good.users",
         'likes': "$like.users",
@@ -110,11 +123,13 @@ const aggregateSearch = (search) => {
     }
 }
 
+
 const getBaseAggregateStage = (sortKey, order, search) => {
     let base = [
         ...lookupLikes,
         ...lookupGood,
         ...lookupTag,
+        ...lookupAuthorName,
         articleProject,
         aggregateSort(sortKey, order)
     ]
