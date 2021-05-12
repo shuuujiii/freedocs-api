@@ -49,7 +49,7 @@ router.delete('/', validateToken, articleController.delete)
 router.post('/tag', validateToken, articleController.addTags)
 
 // router.delete('/tag', validateToken, articleController.deleteTags)
-router.get('/mylist', validateToken, articleController.mylist)
+// router.get('/mylist', validateToken, articleController.mylist)
 
 router.post('/likes', validateToken, articleController.likes)
 router.post('/good', validateToken, articleController.good)

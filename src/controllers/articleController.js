@@ -237,6 +237,7 @@ module.exports = {
             const page = req.query.page || 1
             const sortKey = req.query.sortkey || 'url'
             const tag = req.query.tag
+            const username = req.query.username
             const order = (function (order) {
                 if (!order) {
                     return 1
@@ -255,7 +256,28 @@ module.exports = {
                 limit: 10,
             };
 
-            const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
+            let user
+            if (username) {
+                user = await User.findOne({ 'username': username })
+            }
+            console.log('user', user)
+
+            const base = getBaseAggregateStage(sortKey, order, req.query.search)
+            const stages = [
+                ...base,
+            ]
+
+            if (username) {
+                user = await User.findOne({ 'username': username })
+                stages.push({
+                    $match: {
+                        "user": user._id
+                    }
+                })
+            }
+
+
+            // const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
