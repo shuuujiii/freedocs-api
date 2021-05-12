@@ -27,7 +27,15 @@ let ArticleSchema = new mongoose.Schema(
             ref: 'User',
             require: true,
         },
-    }
+        createdAt: {
+            type: mongoose.Schema.Types.Date,
+        },
+        updatedAt: {
+            type: mongoose.Schema.Types.Date,
+        }
+    }, {
+    timestamps: true
+}
 )
 
 ArticleSchema.plugin(aggregatePaginate);
