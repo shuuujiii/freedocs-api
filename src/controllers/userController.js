@@ -82,6 +82,35 @@ module.exports = {
             next(e)
         }
     },
+
+    profile: async (req, res, next) => {
+        try {
+            const { username } = req.query
+            const userdata = await User.aggregate([
+                {
+                    $match: {
+                        username: username
+                    }
+                }, {
+                    $lookup: {
+                        from: "articles",
+                        localField: '_id',
+                        foreignField: 'user',
+                        as: 'articles'
+                    }
+                },
+                {
+                    $project: {
+                        "username": 1,
+                        "posts": { $size: "$articles" }
+                    }
+                },
+            ])
+            res.json(userdata[0])
+        } catch (e) {
+            next(e)
+        }
+    },
     update: async (req, res) => {
         const { username, admin } = req.body
         if (typeof admin !== 'boolean') {

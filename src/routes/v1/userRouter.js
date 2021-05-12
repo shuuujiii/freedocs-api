@@ -12,6 +12,7 @@ router.post('/auth/email', userController.authEmail)
 router.post('/changepassword', validateToken, userController.changePassword)
 router.post('/changeemail', validateToken, userController.changeEmail)
 router.post('/', userController.create)
+router.get('/profile', userController.profile)
 router.put('/', userController.update)
 router.delete('/', validateToken, userController.delete)
 module.exports = router
