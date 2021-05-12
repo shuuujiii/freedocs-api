@@ -79,6 +79,8 @@ const articleProject = {
         'tags': 1,
         'likeCount': { $size: "$like.users" },
         'goodCount': { $size: '$good.users' },
+        'createdAt': 1,
+        'updatedAt': 1,
     }
 }
 
