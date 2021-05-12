@@ -141,7 +141,6 @@ module.exports = {
     },
     silent: async (req, res, next) => {
         try {
-            console.log('silent req.decoded', req.decoded)
             const payload = {
                 user: req.decoded ? getPayloadUser(req.decoded.user) : null
             }

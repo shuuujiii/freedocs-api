@@ -65,6 +65,39 @@ const lookupTag = [
             as: "tags"
         }
     },
+    // {
+    //     $match: {
+    //         'tags.name': 'add'
+    //     }
+    // },
+
+    // {
+    //     $lookup:
+    //     {
+    //         from: "tags",
+    //         let: { article_tags: "$tags" },
+    //         pipeline: [
+    //             {
+    //                 $match:
+    //                 {
+    //                     $expr:
+    //                     {
+    //                         $and:
+    //                             [
+    //                                 // { $eq: ["$name", "add"] },
+    //                                 { $in: ["$name", ["add"]] },
+    //                                 // { $in: ['cool']
+    //                                 // { $eq: ["$$article_tags", "$_id"] }
+    //                                 { $in: ["$_id", "$$article_tags"] }
+    //                             ]
+
+    //                     }
+    //                 }
+    //             }
+    //         ],
+    //         as: "tags"
+    //     }
+    // }
 
 ]
 
@@ -123,16 +156,27 @@ const aggregateSearch = (search) => {
     }
 }
 
+const tagFilter = (filter) => {
+    return {
+        $match: {
+            'tags.name': { $in: [filter] }
+        }
+    }
+}
 
-const getBaseAggregateStage = (sortKey, order, search) => {
+const getBaseAggregateStage = (sortKey, order, search, tagfilter) => {
     let base = [
         ...lookupLikes,
         ...lookupGood,
         ...lookupTag,
         ...lookupAuthorName,
         articleProject,
-        aggregateSort(sortKey, order)
+        aggregateSort(sortKey, order),
+
     ]
+    if (tagfilter) {
+        base.push(tagFilter(tagfilter))
+    }
     if (search) {
         base.push(aggregateSearch(search))
     }
@@ -192,6 +236,7 @@ module.exports = {
             // const user = req.decoded.user
             const page = req.query.page || 1
             const sortKey = req.query.sortkey || 'url'
+            const tag = req.query.tag
             const order = (function (order) {
                 if (!order) {
                     return 1
@@ -210,7 +255,7 @@ module.exports = {
                 limit: 10,
             };
 
-            const stages = getBaseAggregateStage(sortKey, order, req.query.search)
+            const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
