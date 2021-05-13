@@ -497,6 +497,7 @@ module.exports = {
         try {
             const likesRanking = await Article.aggregate([
                 ...lookupLikes,
+                ...lookupUpvote,
                 {
                     "$project": {
                         "_id": 1,
@@ -507,19 +508,22 @@ module.exports = {
                 aggregateSort('count', -1),
                 aggregateLimit(3),
             ])
-            const goodRanking = await Article.aggregate([
-                ...lookupGood,
+            const voteRanking = await Article.aggregate([
+                ...lookupUpvote,
                 {
                     "$project": {
                         "_id": 1,
                         "url": 1,
-                        'count': { $size: "$good.users" },
+                        // "votes": 1,
+                        "count": { $subtract: [{ $size: '$votes.upvoteUsers' }, { $size: '$votes.downvoteUsers' }] },
+                        'up': { $size: '$votes.upvoteUsers' },
+                        'down': { $size: '$votes.downvoteUsers' },
                     }
                 },
                 aggregateSort('count', -1),
                 aggregateLimit(3),
             ])
-            res.json({ likesRanking: likesRanking, goodRanking: goodRanking })
+            res.json({ likesRanking: likesRanking, voteRanking: voteRanking })
         } catch (e) {
             next(e)
         }
