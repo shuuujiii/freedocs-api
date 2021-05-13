@@ -52,7 +52,9 @@ router.post('/tag', validateToken, articleController.addTags)
 // router.get('/mylist', validateToken, articleController.mylist)
 
 router.post('/likes', validateToken, articleController.likes)
-router.post('/good', validateToken, articleController.good)
+// router.post('/good', validateToken, articleController.good)
+router.post('/upvote', validateToken, articleController.upvote)
+router.post('/downvote', validateToken, articleController.downvote)
 
 router.put('/tag', validateToken, articleController.updateTag)
 

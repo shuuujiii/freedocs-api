@@ -2,6 +2,7 @@ const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
 const Likes = require('../models/likesModel')
 const Good = require('../models/goodModel')
+const Vote = require('../models/voteModel')
 const User = require('../models/userModel')
 const Comment = require('../models/commentModel')
 const { AppError } = require('../utils/appError')
@@ -25,9 +26,28 @@ const lookupGood = [{
         foreignField: "article",
         as: "good"
     }
-}, {
+},
+{
     $unwind: '$good',
-},]
+}
+]
+
+const lookupUpvote = [{
+    $lookup: {
+        from: 'votes',
+        localField: "_id",
+        foreignField: "article",
+        as: "votes"
+    }
+},
+// { $unwind: '$votes' },
+{
+    $unwind: {
+        path: "$votes",
+        "preserveNullAndEmptyArrays": true
+    }
+}
+]
 
 // const lookupTag = [
 //     { $unwind: '$tags' },
@@ -120,11 +140,12 @@ const articleProject = {
         'user': 1,
         'author': '$author.username',
         'description': 1,
-        'good': "$good.users",
+        // 'good': "$good.users",
+        'votes': 1,
         'likes': "$like.users",
         'tags': 1,
         'likeCount': { $size: "$like.users" },
-        'goodCount': { $size: '$good.users' },
+        // 'goodCount': { $size: '$good.users' },
         'createdAt': 1,
         'updatedAt': 1,
     }
@@ -167,7 +188,8 @@ const tagFilter = (filter) => {
 const getBaseAggregateStage = (sortKey, order, search, tagfilter) => {
     let base = [
         ...lookupLikes,
-        ...lookupGood,
+        // ...lookupGood,
+        ...lookupUpvote,
         ...lookupTag,
         ...lookupAuthorName,
         articleProject,
@@ -193,8 +215,9 @@ const getAggregateStageById = (_id) => {
     let stage = [
         matchId,
         ...lookupLikes,
-        ...lookupGood,
+        ...lookupUpvote,
         ...lookupTag,
+        ...lookupAuthorName,
         articleProject,
     ]
 
@@ -223,6 +246,11 @@ module.exports = {
             })
             const g = await Good.create({
                 users: [],
+                article: article._id,
+            })
+            await Vote.create({
+                upvoteUsers: [],
+                donwvoteUsers: [],
                 article: article._id,
             })
             const populated = await Article.findById(article._id).populate('tags')
@@ -495,5 +523,54 @@ module.exports = {
         } catch (e) {
             next(e)
         }
-    }
+    },
+    upvote: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { _id, vote } = req.body
+            const update = vote ? {
+                $addToSet: { upvoteUsers: user._id },
+                $pull: { downvoteUsers: user._id },
+            } : {
+                $pull: { upvoteUsers: user._id },
+            }
+
+            await Vote.findOneAndUpdate(
+                {
+                    article: _id,
+                }, update, {
+                upsert: true, new: true, setDefaultsOnInsert: true
+            })
+            const stage = getAggregateStageById(_id)
+            const populated = await Article.aggregate(stage)
+            // res.json(populated[0])
+            res.json(populated[0])
+        } catch (e) {
+            next(e)
+        }
+    },
+    downvote: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { _id, vote } = req.body
+            const update = vote ? {
+                $addToSet: { downvoteUsers: user._id },
+                $pull: { upvoteUsers: user._id },
+            } : {
+                $pull: { downvoteUsers: user._id },
+            }
+            await Vote.findOneAndUpdate(
+                {
+                    article: _id,
+                }, update, {
+                upsert: true, new: true, setDefaultsOnInsert: true
+            })
+            const stage = getAggregateStageById(_id)
+            const populated = await Article.aggregate(stage)
+            // res.json(populated[0])
+            res.json(populated[0])
+        } catch (e) {
+            next(e)
+        }
+    },
 }
