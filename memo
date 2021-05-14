@@ -1,0 +1,1 @@
+    // "heroku-postbuild": "yarn run migrate-mongo up -f './src/configs/migrate-mongo-config.js'",
