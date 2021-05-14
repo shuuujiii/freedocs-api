@@ -266,6 +266,7 @@ module.exports = {
             const sortKey = req.query.sortkey || 'url'
             const tag = req.query.tag
             const username = req.query.username
+            const favorite = req.query.favorite
             const order = (function (order) {
                 if (!order) {
                     return 1
@@ -288,9 +289,8 @@ module.exports = {
             if (username) {
                 user = await User.findOne({ 'username': username })
             }
-            console.log('user', user)
 
-            const base = getBaseAggregateStage(sortKey, order, req.query.search)
+            const base = getBaseAggregateStage(sortKey, order, req.query.search, tag)
             const stages = [
                 ...base,
             ]
@@ -303,49 +303,21 @@ module.exports = {
                     }
                 })
             }
-
-
-            // const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
-            const articleAggregate = Article.aggregate(stages)
-            const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
-            // return
-            res.status(StatusCodes.OK).json(paginated)
-        } catch (e) {
-            next(e)
-        }
-    },
-    mylist: async (req, res, next) => {
-        try {
-            // const user = req.decoded.user
-            const page = req.query.page || 1
-            const sortKey = req.query.sortkey || 'url'
-            const order = (function (order) {
-                if (!order) {
-                    return 1
-                }
-                if (order === 'asc') {
-                    return 1
-                }
-                if (order === 'desc') {
-                    return -1
-                }
-                return 1
-            })(req.query.order)
-            // const isFavorite = req.query.isFavoriteOnly
-            const pagingOptions = {
-                page: page,
-                limit: 10,
-            };
-
-            const base = getBaseAggregateStage(sortKey, order, req.query.search)
-            const stages = [
-                {
+            console.log('favorite', favorite)
+            if (favorite) {
+                console.log('favorite')
+            } else {
+                console.log('not favorite')
+            }
+            if (favorite) {
+                user = await User.findOne({ 'username': username })
+                stages.push({
                     $match: {
-                        "user": ObjectId(req.decoded.user._id)
+                        'likes': { $in: [user._id] }
                     }
-                },
-                ...base,
-            ]
+                })
+            }
+            // const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
             const articleAggregate = Article.aggregate(stages)
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
             // return
