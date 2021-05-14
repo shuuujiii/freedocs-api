@@ -334,7 +334,7 @@ module.exports = {
                 _id: _id,
                 user: user._id
             }, {
-                url: url,
+                // url: url,
                 description: description,
                 tags: tags
             }, {

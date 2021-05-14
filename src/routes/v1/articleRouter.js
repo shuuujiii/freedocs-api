@@ -10,7 +10,7 @@ const Joi = require('joi')
 Joi.objectId = require('joi-objectid')(Joi)
 
 const ArticleValidator = Joi.object({
-    url: Joi.string().uri().required(),
+    // url: Joi.string().uri().required(),
     description: Joi.string().allow(null).allow(''),
     user: Joi.string().required(),
     tags: Joi.array().items(Joi.objectId().allow(null)).required(),
@@ -19,10 +19,10 @@ const ArticleValidator = Joi.object({
 })
 const validateParam = async (req, res, next) => {
     try {
-        const { url, tags, description } = req.body
+        const { tags, description } = req.body
         const user_id = req.decoded.user._id
         await ArticleValidator.validateAsync({
-            url: url,
+            // url: url,
             description: description,
             user: user_id,
             tags: tags,
