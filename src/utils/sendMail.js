@@ -26,8 +26,8 @@ async function main(username, email, token) {
     });
 
     // send mail with defined transport object
-    let html = `<p>Please check your email address from the link below</p><br>
-        < a href = "${process.env.WHITE_LIST}/auth/email/${token}">confirm email</> `
+    let html = `<p>Hi ${username}!</p> <p>Please check your email address from the link below</p><br>
+        <a href="${process.env.WHITE_LIST}/auth/email/${token}">confirm email</a> `
     let info = await transporter.sendMail({
         from: `"FreeDocs 👻" <${gmail}>`, // sender address
         to: email, // list of receivers

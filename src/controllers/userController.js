@@ -74,7 +74,7 @@ module.exports = {
             // req.session.user = user;
             if (process.env.NODE_ENV !== 'development') {
                 const emailtoken = createEmailToken(payload)
-                mail.sendMail(email, emailtoken)
+                mail.sendMail(user.username, email, emailtoken)
             }
             res.status(StatusCodes.CREATED)
                 .json(payload)
@@ -186,7 +186,7 @@ module.exports = {
 
         try {
             const { token } = req.body
-            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, emailOptions)
+            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, defaultEmailOptions)
             const updateUser = await User.findOneAndUpdate({ _id: decoded.user._id }, {
                 authEmail: true
             }, { new: true })
@@ -248,7 +248,7 @@ module.exports = {
             // req.session.user = user;
             if (process.env.NODE_ENV !== 'development') {
                 const emailtoken = createEmailToken(payload)
-                mail.sendMail(email, emailtoken)
+                mail.sendMail(update.username, email, emailtoken)
             }
             res.json(payload)
         } catch (e) {
