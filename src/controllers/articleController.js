@@ -359,6 +359,14 @@ module.exports = {
                 _id: _id,
                 user: req.decoded.user._id
             })
+
+            await Likes.findOneAndRemove({
+                article: _id,
+            })
+
+            await Vote.findOneAndRemove({
+                article: _id,
+            })
             res.json(article)
         } catch (e) {
             next(e)
