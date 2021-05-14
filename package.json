@@ -49,5 +49,8 @@
   },
   "events": {
     "start": "clear"
+  },
+  "engines": {
+    "node": "12.14.0"
   }
 }
