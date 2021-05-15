@@ -1,5 +1,9 @@
 const User = require('../models/userModel');
 const Article = require('../models/articleModel');
+const Like = require('../models/likesModel')
+const Vote = require('../models/voteModel')
+const Comment = require('../models/commentModel')
+
 const bcrypt = require('bcrypt');
 const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const { AppError } = require('../utils/appError');
@@ -128,8 +132,29 @@ module.exports = {
         if (!user) {
             throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
         }
-        const deleteArticles = await Article.deleteMany({ user: user._id })
-        const deleteUser = await User.deleteOne({ _id: user._id })
+        const articles = await Article.find({ user: user._id })
+
+        const deleteLikeVote = async () => {
+            for (article of articles) {
+                await Like.deleteOne({ article: article._id })
+                await Vote.deleteOne({ article: article._id })
+            }
+        }
+        deleteLikeVote()
+
+        await Comment.updateMany({ user: user._id }, {
+            user: null,
+            comment: "*** comment deleted ***"
+        })
+        await Like.updateMany({ users: { $in: [user._id] } },
+            { $pull: { users: user._id } })
+        await Vote.updateMany({ $or: [{ upvoteUsers: { $in: [user._id] } }, { downvoteUsers: { $in: [user._id] } }] },
+            {
+                $pull: { upvoteUsers: user._id, downvoteUsers: user._id },
+            })
+        await Article.deleteMany({ user: user._id })
+
+        await User.deleteOne({ _id: user._id })
         req.session.token = null;
         res.status(StatusCodes.OK).json({ message: 'successfully delete user' })
     },

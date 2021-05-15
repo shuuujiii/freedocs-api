@@ -35,28 +35,40 @@ try {
             console.log('seeduser', seedUsers)
             const articles = await Article.find({ user: { $in: seedUsers } })
             console.log('articles', articles)
-            const deletelikeVOte = async () => {
+            const deletelikeVote = async () => {
                 for (article of articles) {
                     await Like.remove({ article: article._id })
                     await Vote.remove({ article: article._id })
                 }
             }
-            deletelikeVOte()
-            const deletedUsers = await User.deleteMany({ username: 'seeduser' })
-            console.log('deletedUsers', deletedUsers)
-            const deletedArticles = await Article.deleteMany({ user: { $in: seedUsers }, })
-            console.log('deletedArticles', deletedArticles)
+            deletelikeVote()
+
             const deleteTags = await Tag.deleteMany({
                 name: {
                     $in: ['testTag1', 'testTag2']
                 }
-
             })
 
 
+            const deleteComment = await Comment.updateMany({ user: seedUsers }, {
+                user: null,
+                comment: ""
+            })
+            const deleteLikes = await Like.updateMany({ users: { $in: seedUsers } },
+                { $pull: { users: user._id } })
+
+            const deleteVotes = await Vote.updateMany({ $or: [{ upvoteUsers: { $in: seedUsers } }, { downvoteUsers: { $in: seedUsers } }] },
+                {
+                    $pull: { upvoteUsers: user._id, downvoteUsers: user._id },
+                })
+
+            const deletedArticles = await Article.deleteMany({ user: { $in: seedUsers }, })
+            console.log('deletedArticles', deletedArticles)
             // (async () => {
             //     for(article of deletedArticles)
             // })()
+            const deletedUsers = await User.deleteMany({ username: 'seeduser' })
+            console.log('deletedUsers', deletedUsers)
             console.log('deleteTags', deleteTags)
 
         } catch (e) {
