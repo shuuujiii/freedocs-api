@@ -8,7 +8,8 @@ const stage = require('../configs/config')[environment];
 const User = require('../models/userModel')
 const Article = require('../models/articleModel')
 const Tag = require('../models/tagModel')
-
+const Like = require('../models/likesModel')
+const Vote = require('../models/voteModel')
 
 // const db = mongoose.connection
 // db.on('error', console.error.bind(console, 'MongoDB connection error:'))
@@ -30,17 +31,32 @@ try {
     (async function () {
         try {
             console.log('async function')
-            const users = await User.find({ username: 'seedUser' })
-            console.log('users', users)
-            const deletedUsers = await User.deleteMany({ username: 'seedUser' })
+            const seedUsers = await User.find({ username: 'seeduser' })
+            console.log('seeduser', seedUsers)
+            const articles = await Article.find({ user: { $in: seedUsers } })
+            console.log('articles', articles)
+            const deletelikeVOte = async () => {
+                for (article of articles) {
+                    await Like.remove({ article: article._id })
+                    await Vote.remove({ article: article._id })
+                }
+            }
+            deletelikeVOte()
+            const deletedUsers = await User.deleteMany({ username: 'seeduser' })
             console.log('deletedUsers', deletedUsers)
-            const deletedArticles = await Article.deleteMany({ user: { $in: users }, })
+            const deletedArticles = await Article.deleteMany({ user: { $in: seedUsers }, })
+            console.log('deletedArticles', deletedArticles)
             const deleteTags = await Tag.deleteMany({
                 name: {
                     $in: ['testTag1', 'testTag2']
                 }
 
             })
+
+
+            // (async () => {
+            //     for(article of deletedArticles)
+            // })()
             console.log('deleteTags', deleteTags)
 
         } catch (e) {

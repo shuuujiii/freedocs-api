@@ -8,6 +8,8 @@ const stage = require('../configs/config')[environment];
 const User = require('../models/userModel')
 const Article = require('../models/articleModel')
 const Tag = require('../models/tagModel')
+const Like = require('../models/likesModel')
+const Vote = require('../models/voteModel')
 
 mongoose.connect(stage.dbUri,
     {
@@ -16,22 +18,20 @@ mongoose.connect(stage.dbUri,
         useFindAndModify: false
     }
 )
-console.log('mongoose')
 const db = mongoose.connection
 db.on('error', console.error.bind(console, 'MongoDB connection error:'))
 db.once('open', () => console.log('MongoDB connection successful'))
 try {
-
     (async function () {
         try {
-            const isExistUser = await User.find({ username: 'seedUser' })
+            const isExistUser = await User.find({ username: 'seeduser' })
             if (isExistUser.length !== 0) {
                 console.log('Please delete seed');
                 return;
             }
             const user = await User.create({
-                username: 'seedUser',
-                password: bcrypt.hashSync('seedseed', stage.saltingRounds),
+                username: 'seeduser',
+                password: bcrypt.hashSync('seeduser', stage.saltingRounds),
             })
             const tags = await Tag.insertMany([{ name: 'testTag1' }, { name: 'testTag2' }])
             // console.log(tags)
@@ -41,10 +41,23 @@ try {
                     {
                         url: 'http://localhost/' + i,
                         tags: tags.map(tag => tag._id),
+                        description: 'description' + i,
                         user: user._id
                     })
             }
             const articles = await Article.insertMany(seedArtcles)
+
+            const addlikeVote = async () => {
+                for (article of articles) {
+                    await Like.create({ article: article._id, users: [] })
+                    await Vote.create({ article: article._id, upvoteUsers: [], downvoteUsers: [] })
+                }
+            }
+            addlikeVote()
+            // articles.forEach(async article => {
+            //     await Like.create({ article: article._id, users: [] })
+            //     await Vote.create({ article: article._id, upvoteUsers: [], downvoteUsers: [] })
+            // });
         } catch (e) {
             console.log(e)
         }

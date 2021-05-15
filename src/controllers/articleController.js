@@ -44,7 +44,7 @@ const lookupUpvote = [{
 {
     $unwind: {
         path: "$votes",
-        "preserveNullAndEmptyArrays": true
+        // "preserveNullAndEmptyArrays": true
     }
 }
 ]
@@ -240,14 +240,14 @@ module.exports = {
                 tags: mapped,
                 user: user._id,
             })
-            const l = await Likes.create({
+            await Likes.create({
                 users: [],
                 article: article._id,
             })
-            const g = await Good.create({
-                users: [],
-                article: article._id,
-            })
+            // const g = await Good.create({
+            //     users: [],
+            //     article: article._id,
+            // })
             await Vote.create({
                 upvoteUsers: [],
                 donwvoteUsers: [],
@@ -477,11 +477,12 @@ module.exports = {
         try {
             const likesRanking = await Article.aggregate([
                 ...lookupLikes,
-                ...lookupUpvote,
+                // ...lookupUpvote,
                 {
                     "$project": {
                         "_id": 1,
                         "url": 1,
+                        // 'like': 1,
                         'count': { $size: "$like.users" },
                     }
                 },
