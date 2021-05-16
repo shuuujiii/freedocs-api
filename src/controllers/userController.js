@@ -280,4 +280,48 @@ module.exports = {
             next(e)
         }
     },
+    forgotPassword: async (req, res, next) => {
+        try {
+            const { email } = req.body;
+            const user = await User.findOne({ email: email, authEmail: true })
+            // find user
+            if (user === null) {
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
+            }
+            const payload = {
+                user: getPayloadUser(user)
+            }
+            // if (process.env.NODE_ENV !== 'development') {
+            const emailtoken = createEmailToken(payload)
+            mail.resetPasswordMail(user.username, email, emailtoken)
+            // }
+            res.json({ message: 'send email' })
+        } catch (e) {
+            next(e)
+        }
+    },
+    resetPassword: async (req, res, next) => {
+        try {
+            const { token, password } = req.body
+            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, defaultOptions);
+            const user = await User.findById(decoded.user._id)
+            // find user
+            if (user === null) {
+                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
+            }
+
+            const update = await User.findOneAndUpdate({ _id: user._id }, { password: bcrypt.hashSync(password, stage.saltingRounds) }, { new: true })
+            // authenticated
+            const payload = {
+                user: getPayloadUser(update)
+            }
+            const newtoken = createToken(payload)
+            req.session.token = newtoken;
+            res.json({
+                message: 'password changed'
+            })
+        } catch (e) {
+            next(e)
+        }
+    },
 }
