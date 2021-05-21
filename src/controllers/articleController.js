@@ -497,7 +497,7 @@ module.exports = {
         try {
             const user = await User.findById(req.decoded.user._id)
             const { _id } = req.body
-            const isUpvoted = await Vote.findOne({ article: _id, upvoteUsers: { $in: [user._id] } })
+            const isUpvoted = await Vote.findOne({ article: ObjectId(_id), upvoteUsers: { $in: [user._id] } })
             const update = isUpvoted ? {
                 $pull: { upvoteUsers: user._id },
             } : {
@@ -522,7 +522,7 @@ module.exports = {
         try {
             const user = await User.findById(req.decoded.user._id)
             const { _id } = req.body
-            const isDownVoted = await Vote.findOne({ article: _id, downvoteUsers: { $in: [user._id] } })
+            const isDownVoted = await Vote.findOne({ article: ObjectId(_id), downvoteUsers: { $in: [user._id] } })
             const update = isDownVoted ? {
                 $pull: { downvoteUsers: user._id },
             } : {
