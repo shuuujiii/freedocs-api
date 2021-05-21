@@ -405,26 +405,10 @@ module.exports = {
     likes: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-            const { _id, likes } = req.body
-            const update = likes ? { $addToSet: { users: user._id } } : { $pull: { users: user._id } }
+            const { _id } = req.body
+            const isLike = await Likes.findOne({ article: _id, users: { $in: [user._id] } })
+            const update = isLike ? { $pull: { users: user._id } } : { $addToSet: { users: user._id } }
             const l = await Likes.findOneAndUpdate({
-                article: _id,
-            }, update, {
-                upsert: true, new: true, setDefaultsOnInsert: true
-            })
-            const stage = getAggregateStageById(_id)
-            const populated = await Article.aggregate(stage)
-            res.json(populated[0])
-        } catch (e) {
-            next(e)
-        }
-    },
-    good: async (req, res, next) => {
-        try {
-            const user = await User.findById(req.decoded.user._id)
-            const { _id, good } = req.body
-            const update = good ? { $addToSet: { users: user._id } } : { $pull: { users: user._id } }
-            const article = await Good.findOneAndUpdate({
                 article: _id,
             }, update, {
                 upsert: true, new: true, setDefaultsOnInsert: true
@@ -512,14 +496,14 @@ module.exports = {
     upvote: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-            const { _id, vote } = req.body
-            const update = vote ? {
+            const { _id } = req.body
+            const isUpvoted = await Vote.findOne({ article: _id, upvoteUsers: { $in: [user._id] } })
+            const update = isUpvoted ? {
+                $pull: { upvoteUsers: user._id },
+            } : {
                 $addToSet: { upvoteUsers: user._id },
                 $pull: { downvoteUsers: user._id },
-            } : {
-                $pull: { upvoteUsers: user._id },
             }
-
             await Vote.findOneAndUpdate(
                 {
                     article: _id,
@@ -537,12 +521,13 @@ module.exports = {
     downvote: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
-            const { _id, vote } = req.body
-            const update = vote ? {
+            const { _id } = req.body
+            const isDownVoted = await Vote.findOne({ article: _id, downvoteUsers: { $in: [user._id] } })
+            const update = isDownVoted ? {
+                $pull: { downvoteUsers: user._id },
+            } : {
                 $addToSet: { downvoteUsers: user._id },
                 $pull: { upvoteUsers: user._id },
-            } : {
-                $pull: { downvoteUsers: user._id },
             }
             await Vote.findOneAndUpdate(
                 {
