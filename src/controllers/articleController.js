@@ -303,14 +303,9 @@ module.exports = {
                     }
                 })
             }
-            console.log('favorite', favorite)
+
             if (favorite) {
-                console.log('favorite')
-            } else {
-                console.log('not favorite')
-            }
-            if (favorite) {
-                user = await User.findOne({ 'username': username })
+                user = await User.findOne({ 'username': favorite })
                 stages.push({
                     $match: {
                         'likes': { $in: [user._id] }
