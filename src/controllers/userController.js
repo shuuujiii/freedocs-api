@@ -76,10 +76,8 @@ module.exports = {
             const token = createToken(payload)
             req.session.token = token;
             // req.session.user = user;
-            if (process.env.NODE_ENV !== 'development') {
-                const emailtoken = createEmailToken(payload)
-                mail.sendMail(user.username, email, emailtoken)
-            }
+            const emailtoken = createEmailToken(payload)
+            mail.sendMail(user.username, email, emailtoken)
             res.status(StatusCodes.CREATED)
                 .json(payload)
         } catch (e) {
@@ -115,17 +113,38 @@ module.exports = {
             next(e)
         }
     },
-    update: async (req, res) => {
-        const { username, admin } = req.body
-        if (typeof admin !== 'boolean') {
-            res.status(StatusCodes.BAD_REQUEST).json({ message: 'invalid parameter' })
-            return
+    update: async (req, res, next) => {
+        try {
+            const user = await User.findById(req.decoded.user._id)
+            const { username, admin } = req.body
+            if (!user) {
+                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
+            }
+
+            if (typeof admin !== 'boolean') {
+                res.status(StatusCodes.BAD_REQUEST).json({ message: 'invalid parameter' })
+                return
+            }
+
+            // check duplicate
+            const findUser = await User.findOne({ username: username }).lean()
+            if (findUser) {
+                throw new AppError('AppError', StatusCodes.CONFLICT, 'username already exists', true)
+            }
+            const updatedUser = await User.findOneAndUpdate(
+                { _id: user._id },
+                {
+                    username: username,
+                    admin: admin,
+                },
+                { new: true })
+            console.log('updatedUer', updatedUser)
+            console.log('payloadUser', getPayloadUser(updatedUser))
+            res.json(getPayloadUser(updatedUser))
+        } catch (e) {
+            next(e)
         }
-        const user = await User.findOneAndUpdate(
-            { username: username },
-            { admin: admin },
-            { new: true })
-        res.json(user)
+
     },
     delete: async (req, res) => {
         const user = await User.findById(req.decoded.user._id)
@@ -271,10 +290,8 @@ module.exports = {
             const token = createToken(payload)
             req.session.token = token;
             // req.session.user = user;
-            if (process.env.NODE_ENV !== 'development') {
-                const emailtoken = createEmailToken(payload)
-                mail.sendMail(update.username, email, emailtoken)
-            }
+            const emailtoken = createEmailToken(payload)
+            mail.sendMail(update.username, email, emailtoken)
             res.json(payload)
         } catch (e) {
             next(e)
@@ -291,10 +308,8 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(user)
             }
-            // if (process.env.NODE_ENV !== 'development') {
             const emailtoken = createEmailToken(payload)
             mail.resetPasswordMail(user.username, email, emailtoken)
-            // }
             res.json({ message: 'send email' })
         } catch (e) {
             next(e)

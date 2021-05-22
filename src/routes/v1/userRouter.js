@@ -15,6 +15,6 @@ router.post('/resetpassword', userController.resetPassword)
 router.post('/changeemail', validateToken, userController.changeEmail)
 router.post('/', userController.create)
 router.get('/profile', userController.profile)
-router.put('/', userController.update)
+router.put('/', validateToken, userController.update)
 router.delete('/', validateToken, userController.delete)
 module.exports = router

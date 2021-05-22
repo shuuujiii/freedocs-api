@@ -1,8 +1,14 @@
 "use strict";
 const nodemailer = require("nodemailer");
+const environment = process.env.NODE_ENV;
+// const stage = require('../configs/config')
 
 // async..await is not allowed in global scope, must use a wrapper
 async function main(username, email, token) {
+    if (environment === "development" || environment === 'test') {
+        console.log("send email called but not actually send email");
+        return
+    }
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let gmail = process.env.MAIL_ADDRESS
@@ -45,6 +51,10 @@ async function main(username, email, token) {
 }
 
 async function resetPassword(username, email, token) {
+    if (environment === "development" || environment === 'test') {
+        console.log("send email called but not actually send email");
+        return
+    }
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let gmail = process.env.MAIL_ADDRESS

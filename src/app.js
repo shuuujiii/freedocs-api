@@ -43,8 +43,10 @@ app.use(session({
   store: MongoStore.create({ mongoUrl: stage.dbUri }),
   cookie: {
     httpOnly: true,
-    sameSite: environment !== 'development' ? 'none' : 'lax',
-    secure: environment !== 'development' ? true : false,
+    sameSite: stage.cookie.sameSite,
+    secure: stage.cookie.secure,
+    // sameSite: environment !== 'development' ? 'none' : 'lax',
+    // secure: environment !== 'development' ? true : false,
     maxAge: 1000 * 60 * 60, //60 min
   }
 }))
