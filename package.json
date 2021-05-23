@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node ./src/bin/www",
     "dev": "clear && cross-env NODE_ENV=development DEBUG=appFreeDocs nodemon ./src/bin/www",
-    "test": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
+    "t": "cross-env NODE_ENV=test mocha */test/*.test.js --timeout 10000",
     "testa": "cross-env NODE_ENV=test mocha --timeout 10000",
     "migrate": "yarn run migrate-mongo -f './src/configs/migrate-mongo-config.js",
     "deleteall": "cross-env NODE_ENV=development node ./src/seed/deleteall.js",

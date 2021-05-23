@@ -34,7 +34,7 @@ describe('article api', () => {
     beforeEach((done) => {
         chai
             .request(app)
-            .post("/api/v1/users/login")
+            .post("/api/v1/user/login")
             .send(defaultUser)
             .end((err, res) => {
                 token = res.body.token;
@@ -46,7 +46,7 @@ describe('article api', () => {
     beforeEach((done) => {
         chai
             .request(app)
-            .post("/api/v1/users/login")
+            .post("/api/v1/user/login")
             .send(otherUser)
             .end((err, res) => {
                 otherUserToken = res.body.token;

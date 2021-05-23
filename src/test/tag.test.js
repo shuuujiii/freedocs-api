@@ -37,7 +37,7 @@ describe('tag api', () => {
     beforeEach((done) => {
         chai
             .request(app)
-            .post("/api/v1/users/login")
+            .post("/api/v1/user/login")
             .send(defaultUser)
             .end((err, res) => {
                 normalUserToken = res.body.token;
@@ -49,7 +49,7 @@ describe('tag api', () => {
     beforeEach((done) => {
         chai
             .request(app)
-            .post("/api/v1/users/login")
+            .post("/api/v1/user/login")
             .send(anotherUser)
             .end((err, res) => {
                 adminUserToken = res.body.token;

@@ -88,6 +88,7 @@ module.exports = {
     profile: async (req, res, next) => {
         try {
             const { username } = req.query
+            console.log('username', username)
             const userdata = await User.aggregate([
                 {
                     $match: {
@@ -108,7 +109,8 @@ module.exports = {
                     }
                 },
             ])
-            res.json(userdata[0])
+            console.log('userdata', userdata[0])
+            res.status(StatusCodes.OK).json(userdata[0])
         } catch (e) {
             next(e)
         }
@@ -301,9 +303,10 @@ module.exports = {
         try {
             const { email } = req.body;
             const user = await User.findOne({ email: email, authEmail: true })
+            console.log('user', user)
             // find user
             if (user === null) {
-                throw new AppError('AppError', StatusCodes.NOT_FOUND, 'user is not found', true)
+                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'email is not found or authorized', true)
             }
             const payload = {
                 user: getPayloadUser(user)

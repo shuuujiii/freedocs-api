@@ -7,7 +7,7 @@ const tagRouter = require('./tagRouter')
 // const publicRouter = require('./publidRouter')
 const reportRouter = require('./reportRouter')
 
-router.use('/users', userRouter)
+router.use('/user', userRouter)
 router.use('/article', articleRouter)
 router.use('/tag', tagRouter)
 router.use('/report', reportRouter)
