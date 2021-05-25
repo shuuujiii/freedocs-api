@@ -25,8 +25,7 @@ module.exports = {
             const user = await UserService.createUser(username, password, email)
             // authenticated
             const payload = { user: getPayloadUser(user) }
-            const token = TokenService.createToken(payload)
-            req.session.token = token;
+            req.session.token = TokenService.createToken(payload);
             if (email) {
                 mail.sendMail(user.username, email, payload)
             }
@@ -41,8 +40,7 @@ module.exports = {
             const { username, password } = req.body;
             const user = await UserService.login(username, password)
             const payload = { user: getPayloadUser(user) }
-            const token = TokenService.createToken(payload)
-            req.session.token = token;
+            req.session.token = TokenService.createToken(payload);
             res.json(payload)
         } catch (e) {
             next(e)
@@ -77,8 +75,7 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(updatedUser)
             }
-            const token = TokenService.createToken(payload)
-            req.session.token = token;
+            req.session.token = TokenService.createToken(payload);
             // req.session.user = user;
             res.json({
                 message: 'password changed'
@@ -98,8 +95,7 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(updatedUser)
             }
-            const token = TokenService.createToken(payload)
-            req.session.token = token;
+            req.session.token = TokenService.createToken(payload);
             mail.sendMail(updatedUser.username, email, payload)
             res.json(payload)
         } catch (e) {
@@ -160,8 +156,7 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(update)
             }
-            const newtoken = TokenService.createToken(payload)
-            req.session.token = newtoken;
+            req.session.token = TokenService.createToken(payload);
             res.json({
                 // payload,
                 message: 'password changed'
@@ -185,8 +180,7 @@ module.exports = {
             const payload = {
                 user: req.decoded ? getPayloadUser(req.decoded.user) : null
             }
-            const token = TokenService.createToken(payload)
-            req.session.token = token
+            req.session.token = TokenService.createToken(payload)
             res.json({
                 payload: payload,
             })
