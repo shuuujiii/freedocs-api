@@ -1,30 +1,11 @@
 const UserService = require('../services/userService')
-
 const bcrypt = require('bcrypt');
-const { StatusCodes, getReasonPhrase } = require('http-status-codes');
-const { AppError } = require('../utils/appError');
+const User = require('../models/userModel')
+const { StatusCodes } = require('http-status-codes');
 const environment = process.env.NODE_ENV;
 const stage = require('../configs/config.js')[environment];
-const jwt = require('jsonwebtoken');
 const mail = require('../utils/sendMail')
-
-const defaultOptions = {
-    expiresIn: '2d',
-    issuer: 'shuji watanabe'
-}
-
-const defaultEmailOptions = {
-    expiresIn: '2d',
-    issuer: 'shuji watanabe'
-}
-
-const createToken = (payload, options = defaultOptions) => {
-    return jwt.sign(payload, process.env.JWT_SECRET, options)
-}
-
-const createEmailToken = (payload, options = defaultEmailOptions) => {
-    return jwt.sign(payload, process.env.EMAIL_SECRET, options)
-}
+const TokenService = require('../utils/token')
 
 const getPayloadUser = (user) => {
     if (!user) return null;
@@ -45,9 +26,9 @@ module.exports = {
             const user = await UserService.createUser(username, password, email)
             // authenticated
             const payload = { user: getPayloadUser(user) }
-            const token = createToken(payload)
+            const token = TokenService.createToken(payload)
             req.session.token = token;
-            const emailtoken = createEmailToken(payload)
+            const emailtoken = TokenService.createEmailToken(payload)
             mail.sendMail(user.username, email, emailtoken)
             res.status(StatusCodes.CREATED)
                 .json(payload)
@@ -60,7 +41,7 @@ module.exports = {
             const { username, password } = req.body;
             const user = await UserService.login(username, password)
             const payload = { user: getPayloadUser(user) }
-            const token = createToken(payload)
+            const token = TokenService.createToken(payload)
             req.session.token = token;
             res.json(payload)
         } catch (e) {
@@ -90,13 +71,13 @@ module.exports = {
             const user = await UserService.findUserById(req.decoded.user._id)
             await UserService.updateUserValidation({ password: newPassword })
             await UserService.comparePassword(oldPassword, user.password)
-            const update = await UserService.findOneAndUpdateUser(user._id,
+            const updatedUser = await UserService.findOneAndUpdateUser(user._id,
                 { password: bcrypt.hashSync(newPassword, stage.saltingRounds) })
             // authenticated
             const payload = {
-                user: getPayloadUser(update)
+                user: getPayloadUser(updatedUser)
             }
-            const token = createToken(payload)
+            const token = TokenService.createToken(payload)
             req.session.token = token;
             // req.session.user = user;
             res.json({
@@ -110,17 +91,17 @@ module.exports = {
         try {
             const { email } = req.body;
             const user = await UserService.findUserById(req.decoded.user._id)
-            const updateValue = { email: email, authEmail: false }
-            await UserService.updateUserValidation(updateValue)
-            const update = await UserService.findOneAndUpdateUser(user._id, updateValue)
+            const update = { email: email, authEmail: false }
+            await UserService.updateUserValidation(update)
+            const updatedUser = await UserService.findOneAndUpdateUser(user._id, update)
             // authenticated
             const payload = {
-                user: getPayloadUser(update)
+                user: getPayloadUser(updatedUser)
             }
-            const token = createToken(payload)
+            const token = TokenService.createToken(payload)
             req.session.token = token;
-            const emailtoken = createEmailToken(payload)
-            mail.sendMail(update.username, email, emailtoken)
+            const emailtoken = TokenService.createEmailToken(payload)
+            mail.sendMail(updatedUser.username, email, emailtoken)
             res.json(payload)
         } catch (e) {
             next(e)
@@ -145,7 +126,8 @@ module.exports = {
     authEmail: async (req, res, next) => {
         try {
             const { token } = req.body
-            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, defaultEmailOptions)
+            const decoded = TokenService.verifyEmailToken(token)
+            // const decoded = jwt.verify(token, process.env.EMAIL_SECRET, defaultEmailOptions)
             const updateUser = await UserService.findOneAndUpdateUser(decoded.user._id, { authEmail: true })
             res.json({ message: 'email authenticated' })
         } catch (e) {
@@ -160,7 +142,7 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(user)
             }
-            const emailtoken = createEmailToken(payload)
+            const emailtoken = TokenService.createEmailToken(payload)
             mail.resetPasswordMail(user.username, email, emailtoken)
             res.json({ message: 'send email' })
         } catch (e) {
@@ -170,7 +152,7 @@ module.exports = {
     resetPassword: async (req, res, next) => {
         try {
             const { token, password } = req.body
-            const decoded = jwt.verify(token, process.env.EMAIL_SECRET, defaultOptions);
+            const decoded = TokenService.verifyEmailToken(token)
             const user = await UserService.findUserById(decoded.user._id)
             await UserService.updateUserValidation({ password: password })
             const update = await UserService.findOneAndUpdateUser(user._id, { password: bcrypt.hashSync(password, stage.saltingRounds) })
@@ -178,10 +160,10 @@ module.exports = {
             const payload = {
                 user: getPayloadUser(update)
             }
-            const newtoken = createToken(payload)
+            const newtoken = TokenService.createToken(payload)
             req.session.token = newtoken;
             res.json({
-                payload,
+                // payload,
                 message: 'password changed'
             })
         } catch (e) {
@@ -203,7 +185,7 @@ module.exports = {
             const payload = {
                 user: req.decoded ? getPayloadUser(req.decoded.user) : null
             }
-            const token = createToken(payload)
+            const token = TokenService.createToken(payload)
             req.session.token = token
             res.json({
                 payload: payload,

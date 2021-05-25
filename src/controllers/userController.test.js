@@ -5,6 +5,7 @@ let expect = chai.expect;
 const app = require('../app.js')
 
 const UserService = require('../services/userService')
+const TokenService = require('../utils/token')
 const { StatusCodes } = require('http-status-codes');
 const User = require('../models/userModel')
 const bc = require('../utils/bcrypto');
@@ -19,21 +20,23 @@ const defaultUser = {
 
 chai.use(chaiHttp);
 let user
-beforeEach(async () => { //Before each test we empty the database
-    await User.deleteMany({})
-    user = await User.create({
-        username: defaultUser.username,
-        password: bc.hashPassword(defaultUser.password),
-        email: defaultUser.email,
-        authEmail: defaultUser.authEmail
-    })
-});
-afterEach(() => {
-    user = null
-    sinon.restore();
-})
 
 describe.only('/user', () => {
+    beforeEach(async () => { //Before each test we empty the database
+        await User.deleteMany({})
+        user = await User.create({
+            username: defaultUser.username,
+            password: bc.hashPassword(defaultUser.password),
+            email: defaultUser.email,
+            authEmail: defaultUser.authEmail
+        })
+        console.log('beforeEach', user)
+    });
+    afterEach((done) => {
+        user = null
+        sinon.restore();
+        done()
+    })
     describe('/user/create', () => {
         it('should create user', (done) => {
             const spyCreate = sinon.spy(UserService, 'createUser')
@@ -299,19 +302,10 @@ describe.only('/user', () => {
                     })
             });
         });
-
-
     });
     describe('/user/auth/email', () => {
         it('should authenticate email', (done) => {
-            const defaultEmailOptions = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const createEmailToken = (payload, options = defaultEmailOptions) => {
-                return jwt.sign(payload, process.env.EMAIL_SECRET, options)
-            }
-            const emailToken = createEmailToken({ user: user })
+            const emailToken = TokenService.createEmailToken({ user: user })
             const jwtVerify = sinon.spy(jwt, 'verify')
             const findOneAndUpdateUser = sinon.spy(UserService, 'findOneAndUpdateUser')
             chai.request(app)
@@ -366,14 +360,8 @@ describe.only('/user', () => {
     // resetpassword
     describe('/user/resetpassword', () => {
         it('should reset password', (done) => {
-            const defaultEmailOptions = {
-                expiresIn: '2d',
-                issuer: 'shuji watanabe'
-            }
-            const createEmailToken = (payload, options = defaultEmailOptions) => {
-                return jwt.sign(payload, process.env.EMAIL_SECRET, options)
-            }
-            const emailToken = createEmailToken({ user: user })
+            console.log('testuser->', user)
+            const emailToken = TokenService.createEmailToken({ user: user })
             const jwtVerify = sinon.spy(jwt, 'verify')
             const findUserById = sinon.spy(UserService, 'findUserById')
             const updateUserValidation = sinon.spy(UserService, 'updateUserValidation')
@@ -423,7 +411,6 @@ describe.only('/user', () => {
                     done();
                 })
         });
-
     })
 })
 
