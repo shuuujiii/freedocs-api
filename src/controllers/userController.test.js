@@ -1,16 +1,16 @@
 let chai = require('chai');
 let chaiHttp = require('chai-http');
-// let should = chai.should();
 let expect = chai.expect;
+const sinon = require('sinon');
 const app = require('../app.js')
+const { StatusCodes } = require('http-status-codes');
 
 const UserService = require('../services/userService')
 const TokenService = require('../utils/token')
-const { StatusCodes } = require('http-status-codes');
 const User = require('../models/userModel')
 const bc = require('../utils/bcrypto');
 const jwt = require('jsonwebtoken');
-const sinon = require('sinon');
+const mail = require('../utils/sendMail')
 const defaultUser = {
     username: 'defaultuser',
     password: 'defaultuser',
@@ -42,6 +42,7 @@ describe.only('/user', () => {
             const spyCreate = sinon.spy(UserService, 'createUser')
             const spyCheck = sinon.spy(UserService, 'checkUsernameDuplicated')
             const spyValidate = sinon.spy(UserService, 'createUserValidation')
+            const sendMail = sinon.spy(mail, 'sendMail')
             chai.request(app)
                 .post('/api/v1/user/create')
                 .send({
@@ -60,6 +61,34 @@ describe.only('/user', () => {
                     expect(spyCheck.calledOnce).to.be.true
                     expect(spyValidate.calledOnce).to.be.true
                     expect(spyCreate.calledOnce).to.be.true
+                    expect(sendMail.calledOnce).to.be.true
+                    done()
+                })
+        });
+        it('should create user but not send email without email registration', (done) => {
+            const spyCreate = sinon.spy(UserService, 'createUser')
+            const spyCheck = sinon.spy(UserService, 'checkUsernameDuplicated')
+            const spyValidate = sinon.spy(UserService, 'createUserValidation')
+            const sendMail = sinon.spy(mail, 'sendMail')
+            chai.request(app)
+                .post('/api/v1/user/create')
+                .send({
+                    username: 'nabeshi',
+                    email: '',
+                    password: "abcdefgh",
+                })
+                .end((err, res) => {
+                    expect(res).to.have.cookie('connect.sid');
+                    expect(res).to.have.status(StatusCodes.CREATED)
+                    expect(res.body.user).to.have.property('_id')
+                    expect(res.body.user.username).to.equal('nabeshi')
+                    expect(res.body.user.email).to.equal('')
+                    expect(res.body.user.authEmail).to.equal(false)
+                    expect(res.body.user.admin).to.equal(false)
+                    expect(spyCheck.calledOnce).to.be.true
+                    expect(spyValidate.calledOnce).to.be.true
+                    expect(spyCreate.calledOnce).to.be.true
+                    expect(sendMail.calledOnce).to.be.false
                     done()
                 })
         });
@@ -237,6 +266,7 @@ describe.only('/user', () => {
                 const findUserById = sinon.spy(UserService, "findUserById")
                 const updateUserValidation = sinon.spy(UserService, "updateUserValidation")
                 const findOneAndUpdateUser = sinon.spy(UserService, "findOneAndUpdateUser")
+                const sendMail = sinon.spy(mail, 'sendMail')
                 agent.post('/api/v1/user/changeemail')
                     .send({
                         email: 'newaddress@gmail.com',
@@ -252,6 +282,7 @@ describe.only('/user', () => {
                         expect(findUserById.calledOnce).to.be.true
                         expect(updateUserValidation.calledOnce).to.be.true
                         expect(findOneAndUpdateUser.calledOnce).to.be.true
+                        expect(sendMail.calledOnce).to.be.true
                         expect(err).to.equal(null)
                         done();
                     })
@@ -335,6 +366,7 @@ describe.only('/user', () => {
         it('should send email', (done) => {
 
             const findUserWithAuthEmail = sinon.spy(UserService, 'findUserWithAuthEmail')
+            const resetPasswordMail = sinon.spy(mail, 'resetPasswordMail')
             chai.request(app)
                 .post('/api/v1/user/forgotpassword')
                 .send({ email: 'freedocsfordev@gmail.com' })
@@ -342,6 +374,7 @@ describe.only('/user', () => {
                     res.should.have.status(StatusCodes.OK);
                     expect(res.body.message).to.equal('send email')
                     expect(findUserWithAuthEmail.calledOnce).to.be.true
+                    expect(resetPasswordMail.calledOnce).to.be.true
                     expect(err).to.equal(null)
                     done();
                 })
