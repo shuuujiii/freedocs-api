@@ -1,0 +1,40 @@
+let chai = require('chai');
+// const mongoose = require('mongoose')
+// const environment = process.env.NODE_ENV;
+// const stage = require('../configs/config')[environment];
+require('../app.js')
+// let should = chai.should();
+let expect = chai.expect;
+const User = require('../models/userModel')
+const Article = require('../models/articleModel');
+const Like = require('../models/likesModel')
+const Vote = require('../models/voteModel')
+const Comment = require('../models/commentModel')
+const UserService = require('../services/userService')
+const bc = require('../utils/bcrypto');
+let user
+const defaultUser = {
+    username: 'defaultuser',
+    password: 'defaultuser',
+    email: 'freedocsfordev@gmail.com',
+    authEmail: true
+}
+beforeEach(async () => { //Before each test we empty the database
+    await User.deleteMany({})
+    user = await User.create({
+        username: defaultUser.username,
+        password: bc.hashPassword(defaultUser.password),
+        email: defaultUser.email,
+        authEmail: defaultUser.authEmail
+    })
+});
+afterEach(() => {
+    user = null
+})
+describe.only('deleteUser', () => {
+    it('should delete user data', async () => {
+        await UserService.deleteUser(user._id)
+        const u = await User.findById(user._id)
+        expect(u).to.be.null
+    })
+})

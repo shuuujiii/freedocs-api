@@ -5,16 +5,15 @@ const { validateToken, silentValidateToken } = require('../../middlewares/valida
 const userController = require('../../controllers/userController')
 router.post('/create', userController.create)
 router.post('/login', userController.login)
-router.post('/logout', userController.logout)
 router.put('/update', validateToken, userController.update)
-router.delete('/delete', validateToken, userController.delete)
-// router.post('/authenticate', validateToken, userController.authenticate)
-router.post('/silent', silentValidateToken, userController.silent)
 router.post('/changepassword', validateToken, userController.changePassword)
 router.post('/changeemail', validateToken, userController.changeEmail)
-
+router.delete('/delete', validateToken, userController.delete)
+router.post('/logout', userController.logout)
 router.post('/auth/email', userController.authEmail)
 router.post('/forgotpassword', userController.forgotPassword)
 router.post('/resetpassword', userController.resetPassword)
 router.get('/profile', userController.profile)
+router.post('/silent', silentValidateToken, userController.silent)
+
 module.exports = router
