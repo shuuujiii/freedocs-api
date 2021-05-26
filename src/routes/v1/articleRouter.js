@@ -5,6 +5,7 @@ const { validateToken } = require('../../middlewares/validator/jwtvalidator')
 // const ArticleValidator = require('../../middlewares/validator/articleValidator')
 // const TagValidator = require('../../middlewares/validator/tagValidator')
 const articleController = require('../../controllers/articleController')
+const commentController = require('../../controllers/commentController')
 const { AppError } = require('../../utils/appError')
 const Joi = require('joi')
 Joi.objectId = require('joi-objectid')(Joi)
@@ -35,31 +36,24 @@ const validateParam = async (req, res, next) => {
         next(e)
     }
 }
-
-router.post('/', validateToken, validateParam, articleController.create)
-
-// router.get('/all', articleController.readall)
 router.get('/lists', articleController.lists)
 router.get('/ranking', articleController.getRank)
 
-router.put('/', validateToken, validateParam, articleController.update)
-
-router.delete('/', validateToken, articleController.delete)
-
-router.post('/tag', validateToken, articleController.addTags)
-
-// router.delete('/tag', validateToken, articleController.deleteTags)
-// router.get('/mylist', validateToken, articleController.mylist)
+router.post('/create', validateToken, validateParam, articleController.create)
+router.put('/update', validateToken, articleController.update)
+router.delete('/delete', validateToken, articleController.delete)
 
 router.post('/likes', validateToken, articleController.likes)
-// router.post('/good', validateToken, articleController.good)
 router.post('/upvote', validateToken, articleController.upvote)
 router.post('/downvote', validateToken, articleController.downvote)
 
-router.put('/tag', validateToken, articleController.updateTag)
+router.get('/comment', commentController.getComment)
+router.post('/comment', validateToken, commentController.addComment)
 
-router.get('/comment', articleController.getComment)
 
-router.post('/comment', validateToken, articleController.addComment)
+
+
+
+
 
 module.exports = router

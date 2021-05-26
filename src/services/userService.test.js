@@ -1,14 +1,11 @@
 let chai = require('chai');
-// const mongoose = require('mongoose')
-// const environment = process.env.NODE_ENV;
-// const stage = require('../configs/config')[environment];
 require('../app.js')
-// let should = chai.should();
 let expect = chai.expect;
 const User = require('../models/userModel')
 const UserService = require('../services/userService')
 const bc = require('../utils/bcrypto');
 let user
+
 const defaultUser = {
     username: 'defaultuser',
     password: 'defaultuser',

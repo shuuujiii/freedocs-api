@@ -21,7 +21,7 @@ const defaultUser = {
 chai.use(chaiHttp);
 let user
 
-describe.only('/user', () => {
+describe('/user', () => {
     beforeEach(async () => { //Before each test we empty the database
         await User.deleteMany({})
         user = await User.create({
