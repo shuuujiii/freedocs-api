@@ -336,27 +336,6 @@ module.exports = {
         }
     },
 
-    likes: async (req, res, next) => {
-        try {
-            const user = await User.findById(req.decoded.user._id)
-            if (!user) {
-                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
-            }
-            const { _id } = req.body
-            const isLike = await Likes.findOne({ article: _id, users: { $in: [user._id] } })
-            const update = isLike ? { $pull: { users: user._id } } : { $addToSet: { users: user._id } }
-            const l = await Likes.findOneAndUpdate({
-                article: _id,
-            }, update, {
-                upsert: true, new: true, setDefaultsOnInsert: true
-            })
-            const stage = getAggregateStageById(_id)
-            const populated = await Article.aggregate(stage)
-            res.json(populated[0])
-        } catch (e) {
-            next(e)
-        }
-    },
     upvote: async (req, res, next) => {
         try {
             const user = await User.findById(req.decoded.user._id)
