@@ -10,8 +10,6 @@ const UserService = require('../services/userService')
 const TokenService = require('../utils/token')
 const User = require('../models/userModel')
 const Tag = require('../models/tagModel')
-const Likes = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const Article = require('../models/articleModel')
 const bc = require('../utils/bcrypto');
 const jwt = require('jsonwebtoken');
@@ -29,8 +27,6 @@ describe('ArticleController', () => {
         await User.deleteMany({})
         await Article.deleteMany({})
         await Tag.deleteMany({})
-        await Likes.deleteMany({})
-        await Vote.deleteMany({})
         await User.create({
             username: defaultUser.username,
             password: bc.hashPassword(defaultUser.password),
@@ -66,15 +62,6 @@ describe('ArticleController', () => {
                 url: 'http://yahoo.co.jp',
                 description: 'test',
                 tags: []
-            })
-            await Likes.create({
-                users: [],
-                article: article._id,
-            })
-            await Vote.create({
-                upvoteUsers: [],
-                donwvoteUsers: [],
-                article: article._id,
             })
         });
         afterEach(() => {
@@ -128,7 +115,7 @@ describe('ArticleController', () => {
                         tags: TagIds
                     })
                 expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('_id', 'url', 'description', 'user', 'author', 'tags', 'likes', 'likeCount', 'votes', 'createdAt', 'updatedAt')
+                expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'tags', 'upvoteUsers', 'downvoteUsers', 'favoriteUsers', 'createdAt', 'updatedAt')
                 expect(res.body._id).to.equal(mypost._id.toString())
                 expect(res.body.url).to.equal('http://yahoo.co.jp')
                 expect(res.body.description).to.equal('update description')

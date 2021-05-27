@@ -10,12 +10,8 @@ const UserService = require('../services/userService')
 const TokenService = require('../utils/token')
 const User = require('../models/userModel')
 const Tag = require('../models/tagModel')
-const Likes = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const Article = require('../models/articleModel')
 const bc = require('../utils/bcrypto');
-const jwt = require('jsonwebtoken');
-const mail = require('../utils/sendMail')
 chai.use(chaiHttp);
 const defaultUser = {
     username: 'defaultuser',

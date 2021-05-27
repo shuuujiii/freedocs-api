@@ -10,8 +10,6 @@ const UserService = require('../services/userService')
 const TokenService = require('../utils/token')
 const User = require('../models/userModel')
 const Tag = require('../models/tagModel')
-const Likes = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const Article = require('../models/articleModel')
 const bc = require('../utils/bcrypto');
 const jwt = require('jsonwebtoken');
@@ -29,8 +27,6 @@ describe('VoteController', () => {
         await User.deleteMany({})
         await Article.deleteMany({})
         await Tag.deleteMany({})
-        await Likes.deleteMany({})
-        await Vote.deleteMany({})
         await User.create({
             username: defaultUser.username,
             password: bc.hashPassword(defaultUser.password),
@@ -136,7 +132,7 @@ describe('VoteController', () => {
                     url: 'http://yahoo.co.jp',
                     user: loginUser._id
                 })
-                await Vote.updateOne({ article: mypost._id }, {
+                await Article.updateOne({ article: mypost._id }, {
                     $addToSet: {
                         upvoteUsers: loginUser._id
                     }
