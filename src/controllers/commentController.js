@@ -1,7 +1,5 @@
 const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
-const Likes = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const User = require('../models/userModel')
 const ArticleService = require('../services/articleService')
 const UserService = require('../services/userService')

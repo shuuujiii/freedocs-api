@@ -1,7 +1,5 @@
 const { StatusCodes } = require('http-status-codes')
 const Article = require('../models/articleModel')
-const Likes = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const User = require('../models/userModel')
 const ArticleService = require('../services/articleService')
 const UserService = require('../services/userService')
@@ -161,68 +159,92 @@ const getAggregateStageById = (_id) => {
 
 }
 module.exports = {
-    lists: async (req, res, next) => {
+    getPosts: async (req, res, next) => {
         try {
-            // const user = req.decoded.user
             const page = req.query.page || 1
-            const sortKey = req.query.sortkey || 'url'
-            const tag = req.query.tag
-            const username = req.query.username
-            const favorite = req.query.favorite
-            const order = (function (order) {
-                if (!order) {
-                    return 1
-                }
-                if (order === 'asc') {
-                    return 1
-                }
-                if (order === 'desc') {
-                    return -1
-                }
-                return 1
-            })(req.query.order)
-            // const isFavorite = req.query.isFavoriteOnly
             const pagingOptions = {
                 page: page,
                 limit: 10,
             };
-
-            let user
-            if (username) {
-                user = await User.findOne({ 'username': username })
-            }
-
-            const base = getBaseAggregateStage(sortKey, order, req.query.search, tag)
-            const stages = [
-                ...base,
-            ]
-
-            if (username) {
-                user = await User.findOne({ 'username': username })
-                stages.push({
-                    $match: {
-                        "user": user._id
+            const articleAggregate = Article.aggregate([
+                {
+                    $lookup: {
+                        from: 'tags',
+                        localField: "tags",
+                        foreignField: "_id",
+                        as: "tags"
                     }
-                })
-            }
-
-            if (favorite) {
-                user = await User.findOne({ 'username': favorite })
-                stages.push({
-                    $match: {
-                        'likes': { $in: [user._id] }
-                    }
-                })
-            }
-            // const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
-            const articleAggregate = Article.aggregate(stages)
+                },
+            ])
             const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
-            // return
-            res.status(StatusCodes.OK).json(paginated)
+            res.json(paginated)
         } catch (e) {
             next(e)
         }
     },
+
+    // lists: async (req, res, next) => {
+    //     try {
+    //         // const user = req.decoded.user
+    //         const page = req.query.page || 1
+    //         const sortKey = req.query.sortkey || 'url'
+    //         const tag = req.query.tag
+    //         const username = req.query.username
+    //         const favorite = req.query.favorite
+    //         const order = (function (order) {
+    //             if (!order) {
+    //                 return 1
+    //             }
+    //             if (order === 'asc') {
+    //                 return 1
+    //             }
+    //             if (order === 'desc') {
+    //                 return -1
+    //             }
+    //             return 1
+    //         })(req.query.order)
+    //         // const isFavorite = req.query.isFavoriteOnly
+    //         const pagingOptions = {
+    //             page: page,
+    //             limit: 10,
+    //         };
+
+    //         let user
+    //         if (username) {
+    //             user = await User.findOne({ 'username': username })
+    //         }
+
+    //         const base = getBaseAggregateStage(sortKey, order, req.query.search, tag)
+    //         const stages = [
+    //             ...base,
+    //         ]
+
+    //         if (username) {
+    //             user = await User.findOne({ 'username': username })
+    //             stages.push({
+    //                 $match: {
+    //                     "user": user._id
+    //                 }
+    //             })
+    //         }
+
+    //         if (favorite) {
+    //             user = await User.findOne({ 'username': favorite })
+    //             stages.push({
+    //                 $match: {
+    //                     'likes': { $in: [user._id] }
+    //                 }
+    //             })
+    //         }
+    //         // const stages = getBaseAggregateStage(sortKey, order, req.query.search, tag)
+    //         const articleAggregate = Article.aggregate(stages)
+    //         const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
+    //         // return
+    //         res.status(StatusCodes.OK).json(paginated)
+    //     } catch (e) {
+    //         next(e)
+    //     }
+    // },
     getRank: async (req, res, next) => {
         try {
             const likesRanking = await Article.aggregate([
@@ -264,21 +286,11 @@ module.exports = {
             if (findArticle) {
                 throw new AppError('AppError', StatusCodes.CONFLICT, 'sorry! this URL already exists', true)
             }
-            const mapped = tags.map(tag => { return { locked: true, _id: tag } })
             const article = await Article.create({
                 url: url,
                 description: description,
-                tags: mapped,
+                tags: tags,
                 user: user._id,
-            })
-            await Likes.create({
-                users: [],
-                article: article._id,
-            })
-            await Vote.create({
-                upvoteUsers: [],
-                donwvoteUsers: [],
-                article: article._id,
             })
             const populated = await Article.findById(article._id).populate('tags')
             res.status(StatusCodes.CREATED).json(populated)
@@ -323,13 +335,6 @@ module.exports = {
             if (!article) {
                 throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
             }
-            await Likes.findOneAndRemove({
-                article: _id,
-            })
-
-            await Vote.findOneAndRemove({
-                article: _id,
-            })
             res.json(article)
         } catch (e) {
             next(e)

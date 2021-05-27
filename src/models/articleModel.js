@@ -1,5 +1,4 @@
 const mongoose = require('mongoose')
-// const mongoosePaginate = require('mongoose-paginate-v2');
 const aggregatePaginate = require('mongoose-aggregate-paginate-v2');
 let ArticleSchema = new mongoose.Schema(
     {
@@ -11,14 +10,6 @@ let ArticleSchema = new mongoose.Schema(
             type: String,
         },
         tags: [{
-            // _id: {
-            //     type: mongoose.Schema.Types.ObjectId,
-            //     ref: 'Tag'
-            // },
-            // locked: {
-            //     type: Boolean,
-            //     default: false,
-            // }
             type: mongoose.Schema.Types.ObjectId,
             ref: 'Tag'
         }],
@@ -27,6 +18,18 @@ let ArticleSchema = new mongoose.Schema(
             ref: 'User',
             require: true,
         },
+        favoriteUsers: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        upvoteUsers: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
+        downvoteUsers: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User',
+        }],
         createdAt: {
             type: mongoose.Schema.Types.Date,
         },

@@ -1,7 +1,5 @@
 const User = require('../models/userModel')
 const Article = require('../models/articleModel');
-const Like = require('../models/likesModel')
-const Vote = require('../models/voteModel')
 const Comment = require('../models/commentModel')
 const bcrypt = require('bcrypt');
 const Joi = require('joi')
@@ -96,20 +94,13 @@ const findOneAndUpdateUser = async (_id, update) => {
 }
 const deleteUser = async (_id) => {
     const articles = await Article.find({ user: _id })
-    const deleteLikeVote = async () => {
-        for (article of articles) {
-            await Like.deleteOne({ article: article._id })
-            await Vote.deleteOne({ article: article._id })
-        }
-    }
-    await deleteLikeVote()
 
     await Comment.updateMany({ user: _id }, {
         user: null,
         comment: "*** comment deleted ***"
     })
 
-    await Vote.updateMany({
+    await Article.updateMany({
         $or: [
             { upvoteUsers: { $in: [_id] } },
             { downvoteUsers: { $in: [_id] } }
@@ -118,8 +109,8 @@ const deleteUser = async (_id) => {
         {
             $pull: { upvoteUsers: _id, downvoteUsers: _id },
         })
-    await Like.updateMany({ users: { $in: [_id] } },
-        { $pull: { users: _id } })
+    await Article.updateMany({ favoriteUsers: { $in: [_id] } },
+        { $pull: { favoriteUsers: _id } })
     await Article.deleteMany({ user: _id })
     await User.deleteOne({ _id: _id })
     return

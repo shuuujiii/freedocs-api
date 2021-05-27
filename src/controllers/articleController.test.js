@@ -92,7 +92,7 @@ describe('ArticleController', () => {
                     .end((err, res) => {
                         expect(res).to.have.status(StatusCodes.CREATED)
                         expect(res.body).to.have.keys(
-                            '_id', 'url', 'description', 'user', 'createdAt', 'updatedAt', 'tags', '__v')
+                            '_id', 'url', 'description', 'user', 'favoriteUsers', 'upvoteUsers', 'downvoteUsers', 'createdAt', 'updatedAt', 'tags', '__v')
                         expect(res.body.url).to.equal('http://google.com')
                         expect(res.body.description).to.equal('description test')
                         expect(res.body.tags).to.have.length(2)
@@ -183,7 +183,7 @@ describe('ArticleController', () => {
                 const res = await agent.delete('/api/v1/article/delete')
                     .send({ _id: mypost._id, })
                 expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'tags', 'createdAt', 'updatedAt')
+                expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'favoriteUsers', 'upvoteUsers', 'downvoteUsers', 'tags', 'createdAt', 'updatedAt')
                 expect(res.body._id).to.equal(mypost._id.toString())
             })
             it("should not delete other user's article", async () => {
@@ -201,113 +201,6 @@ describe('ArticleController', () => {
                 const res = await agent.delete('/api/v1/article/delete')
                     .send({ _id: otherUsersArticle._id, })
                 expect(res).to.have.status(StatusCodes.NO_CONTENT)
-            })
-        })
-        // describe('post /article/tag', () => {
-
-        // })
-        // describe('put /article/tag', () => {
-
-        // })
-        describe('/article/likes', () => {
-            it('should be likes turning', async () => {
-                const mypost = await Article.findOne({
-                    url: 'http://yahoo.co.jp',
-                    user: loginUser._id
-                })
-                const res = await agent.post('/api/v1/article/likes')
-                    .send({ _id: mypost._id, })
-                expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'users')
-                expect(res.body.article).to.equal(mypost._id.toString())
-                expect(res.body.users).to.have.length(1)
-                const resTurning = await agent.post('/api/v1/article/likes')
-                    .send({ _id: mypost._id, })
-                expect(resTurning).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'users')
-                expect(resTurning.body.article).to.equal(mypost._id.toString())
-                expect(res.body.users).to.have.length(0)
-
-            })
-        })
-        describe('/article/upvote', () => {
-            it('should turn upvote', async () => {
-                const mypost = await Article.findOne({
-                    url: 'http://yahoo.co.jp',
-                    user: loginUser._id
-                })
-                const res = await agent.post('/api/v1/article/upvote')
-                    .send({ _id: mypost._id, })
-                expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(res.body.votes.upvoteUsers).to.have.length(1)
-                expect(res.body.votes.downvoteUsers).to.have.length(0)
-                expect(res.body.article).to.equal(mypost._id.toString())
-                const resTurning = await agent.post('/api/v1/article/upvote')
-                    .send({ _id: mypost._id, })
-                expect(resTurning).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(resTurning.body.upvoteUsers).to.have.length(0)
-                expect(resTurning.body.downvoteUsers).to.have.length(0)
-                expect(resTurning.body.article).to.equal(mypost._id.toString())
-            })
-            it('should upvote and delete downvote if it already downvoted', async () => {
-                const mypost = await Article.findOne({
-                    url: 'http://yahoo.co.jp',
-                    user: loginUser._id
-                })
-                await Vote.updateOne({ article: mypost._id }, {
-                    $addToSet: {
-                        downvoteUsers: loginUser._id
-                    }
-                })
-                const res = await agent.post('/api/v1/article/upvote')
-                    .send({ _id: mypost._id, })
-                expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(res.body.upvoteUsers).to.have.length(1)
-                expect(res.body.downvoteUsers).to.have.length(0)
-                expect(res.body.article).to.equal(mypost._id.toString())
-            })
-        })
-        describe('/article/downvote', () => {
-            it('should turn downvote', async () => {
-                const mypost = await Article.findOne({
-                    url: 'http://yahoo.co.jp',
-                    user: loginUser._id
-                })
-                const res = await agent.post('/api/v1/article/downvote')
-                    .send({ _id: mypost._id, })
-                expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(res.body.upvoteUsers).to.have.length(0)
-                expect(res.body.downvoteUsers).to.have.length(1)
-                expect(res.body.article).to.equal(mypost._id.toString())
-                const resTurning = await agent.post('/api/v1/article/downvote')
-                    .send({ _id: mypost._id, })
-                expect(resTurning).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(resTurning.body.upvoteUsers).to.have.length(0)
-                expect(resTurning.body.downvoteUsers).to.have.length(0)
-                expect(resTurning.body.article).to.equal(mypost._id.toString())
-            })
-            it('should downvote and delete upvote if it already upvoted', async () => {
-                const mypost = await Article.findOne({
-                    url: 'http://yahoo.co.jp',
-                    user: loginUser._id
-                })
-                await Vote.updateOne({ article: mypost._id }, {
-                    $addToSet: {
-                        upvoteUsers: loginUser._id
-                    }
-                })
-                const res = await agent.post('/api/v1/article/downvote')
-                    .send({ _id: mypost._id, })
-                expect(res).to.have.status(StatusCodes.OK)
-                expect(res.body).to.have.keys('article', 'downvoteUsers', 'upvoteUsers')
-                expect(res.body.upvoteUsers).to.have.length(0)
-                expect(res.body.downvoteUsers).to.have.length(1)
-                expect(res.body.article).to.equal(mypost._id.toString())
             })
         })
     })

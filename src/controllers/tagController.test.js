@@ -15,7 +15,7 @@ const defaultUser = {
     email: 'freedocsfordev@gmail.com',
     authEmail: true
 }
-describe.only('tagController', () => {
+describe('tagController', () => {
     let agent
     let loginUser
     beforeEach(async () => {

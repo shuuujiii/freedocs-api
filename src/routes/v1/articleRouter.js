@@ -38,16 +38,14 @@ const validateParam = async (req, res, next) => {
         next(e)
     }
 }
-router.get('/lists', articleController.lists)
+router.get('/lists', articleController.getPosts)
 router.get('/ranking', articleController.getRank)
 
 router.post('/create', validateToken, validateParam, articleController.create)
 router.put('/update', validateToken, articleController.update)
 router.delete('/delete', validateToken, articleController.delete)
 
-router.get('/favorite', favoriteController.getFavorite)
 router.post('/likes', validateToken, favoriteController.invertFav)
-router.get('/vote', voteController.getVote)
 router.post('/upvote', validateToken, voteController.upvote)
 router.post('/downvote', validateToken, voteController.downvote)
 
