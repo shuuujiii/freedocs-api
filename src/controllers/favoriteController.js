@@ -21,14 +21,17 @@ module.exports = {
             const { _id } = req.body
             const isLike = await Favorite.findOne({ article: _id, users: { $in: [user._id] } })
             const update = isLike ? { $pull: { users: user._id } } : { $addToSet: { users: user._id } }
-            const l = await Favorite.findOneAndUpdate({
+            const favorite = await Favorite.findOneAndUpdate({
                 article: _id,
             }, update, {
                 upsert: true, new: true, setDefaultsOnInsert: true
             })
             // const stage = getAggregateStageById(_id)
             // const populated = await Article.aggregate(stage)
-            res.json(l)
+            res.json({
+                article: favorite.article,
+                users: favorite.users,
+            })
         } catch (e) {
             next(e)
         }

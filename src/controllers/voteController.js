@@ -7,11 +7,11 @@ module.exports = {
     getVote: async (req, res, next) => {
         try {
             const { article_id } = req.query
-            const a = await Vote.findOne({ article: article_id })
-            if (!a) {
+            const vote = await Vote.findOne({ article: article_id })
+            if (!vote) {
                 throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
             }
-            res.json(a)
+            res.json(vote)
         } catch (e) {
             next(e)
         }
@@ -33,7 +33,11 @@ module.exports = {
                 }, update, {
                 upsert: true, new: true, setDefaultsOnInsert: true
             })
-            res.json(result)
+            res.json({
+                article: result.article,
+                downvoteUsers: result.downvoteUsers,
+                upvoteUsers: result.downvoteUsers,
+            })
         } catch (e) {
             next(e)
         }
@@ -58,7 +62,11 @@ module.exports = {
             // const stage = getAggregateStageById(_id)
             // const populated = await Article.aggregate(stage)
             // res.json(populated[0])
-            res.json(result)
+            res.json({
+                article: result.article,
+                downvoteUsers: result.downvoteUsers,
+                upvoteUsers: result.downvoteUsers,
+            })
         } catch (e) {
             next(e)
         }
