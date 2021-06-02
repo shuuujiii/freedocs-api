@@ -8,6 +8,7 @@ let ArticleSchema = new mongoose.Schema(
         },
         description: {
             type: String,
+            default: ''
         },
         tags: [{
             type: mongoose.Schema.Types.ObjectId,

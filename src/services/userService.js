@@ -42,6 +42,7 @@ const checkUsernameDuplicated = async (username) => {
 
 const comparePassword = async (inputPassword, storedPassword) => {
     const match = await bcrypt.compare(inputPassword, storedPassword)
+
     if (!match) {
         throw new AppError(getReasonPhrase(StatusCodes.UNAUTHORIZED), StatusCodes.UNAUTHORIZED, 'password not matched', true)
     }
@@ -149,16 +150,16 @@ const login = async (username, password) => {
 }
 
 module.exports = {
-    findUserById: findUserById,
-    findUserByUsername: findUserByUsername,
-    findUserWithAuthEmail: findUserWithAuthEmail,
-    checkUsernameDuplicated: checkUsernameDuplicated,
-    comparePassword: comparePassword,
-    createUserValidation: createUserValidation,
-    updateUserValidation: updateUserValidation,
-    createUser: createUser,
-    findOneAndUpdateUser: findOneAndUpdateUser,
-    deleteUser: deleteUser,
-    getProfile: getProfile,
-    login: login,
+    findUserById,
+    findUserByUsername,
+    findUserWithAuthEmail,
+    checkUsernameDuplicated,
+    comparePassword,
+    createUserValidation,
+    updateUserValidation,
+    createUser,
+    findOneAndUpdateUser,
+    deleteUser,
+    getProfile,
+    login,
 }

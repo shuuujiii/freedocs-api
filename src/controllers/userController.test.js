@@ -30,7 +30,6 @@ describe('/user', () => {
             email: defaultUser.email,
             authEmail: defaultUser.authEmail
         })
-        console.log('beforeEach', user)
     });
     afterEach((done) => {
         user = null
