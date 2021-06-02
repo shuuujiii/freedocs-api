@@ -5,9 +5,6 @@ const sinon = require('sinon');
 const app = require('../app.js')
 const { StatusCodes } = require('http-status-codes');
 
-const ArticleService = require('../services/articleService')
-const UserService = require('../services/userService')
-const TokenService = require('../utils/token')
 const User = require('../models/userModel')
 const Tag = require('../models/tagModel')
 const Article = require('../models/articleModel')
@@ -68,9 +65,7 @@ describe('favoriteController', () => {
                 const res = await agent.post('/api/v1/article/likes')
                     .send({ _id: mypost._id, })
                 expect(res).to.have.status(StatusCodes.OK)
-                // expect(res.body).to.have.keys('article', 'users')
                 expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'favoriteUsers', 'upvoteUsers', 'downvoteUsers', 'tags', 'createdAt', 'updatedAt')
-                console.log('add fav', res.body)
                 expect(res.body._id).to.equal(mypost._id.toString())
                 expect(res.body.favoriteUsers).to.have.length(1)
                 const resTurning = await agent.post('/api/v1/article/likes')

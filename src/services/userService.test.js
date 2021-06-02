@@ -18,7 +18,7 @@ const defaultUser = {
     authEmail: true
 }
 
-describe.only('UserService', () => {
+describe('UserService', () => {
     beforeEach(async () => { //Before each test we empty the database
         await User.deleteMany({})
         await Article.deleteMany({})
