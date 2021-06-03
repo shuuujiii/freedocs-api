@@ -23,7 +23,7 @@ const anotherUser = {
     email: 'another@gmail.com',
     authEmail: true,
 }
-describe.only('commentController', () => {
+describe('commentController', () => {
     beforeEach(async () => { //Before each test we empty the database
         await User.deleteMany({})
         await Article.deleteMany({})

@@ -6,14 +6,10 @@ const app = require('../app.js')
 const { StatusCodes } = require('http-status-codes');
 
 const ArticleService = require('../services/articleService')
-const UserService = require('../services/userService')
-const TokenService = require('../utils/token')
 const User = require('../models/userModel')
 const Tag = require('../models/tagModel')
 const Article = require('../models/articleModel')
 const bc = require('../utils/bcrypto');
-const jwt = require('jsonwebtoken');
-const mail = require('../utils/sendMail')
 chai.use(chaiHttp);
 const defaultUser = {
     username: 'defaultuser',
@@ -40,10 +36,26 @@ describe('ArticleController', () => {
         done()
     })
     describe('/article/lists', () => {
-
+        it('should return articles', (done) => {
+            chai.request(app)
+                .get("/api/v1/article/lists")
+                .end((err, res) => {
+                    res.should.have.status(StatusCodes.OK);
+                    expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
+                    done();
+                });
+        })
     })
     describe('/article/ranking', () => {
-
+        it('should return ranking', (done) => {
+            chai.request(app)
+                .get("/api/v1/article/ranking")
+                .end((err, res) => {
+                    res.should.have.status(StatusCodes.OK);
+                    expect(res.body).to.have.contain.keys('recentlyPosted', 'likesRanking', 'voteRanking')
+                    done();
+                });
+        })
     })
     describe('login user', () => {
         let agent
@@ -69,7 +81,8 @@ describe('ArticleController', () => {
             loginUser = null
         })
         describe('/article/create', () => {
-            it('should crate post', (done) => {
+            it('should login user create article', (done) => {
+                const createArticle = sinon.spy(ArticleService, "createArticle")
                 agent.post("/api/v1/article/create")
                     .send({
                         url: 'http://google.com',
@@ -78,6 +91,7 @@ describe('ArticleController', () => {
                     })
                     .end((err, res) => {
                         expect(res).to.have.status(StatusCodes.CREATED)
+                        expect(createArticle.calledOnce).to.be.true
                         expect(res.body).to.have.keys(
                             '_id', 'url', 'description', 'user', 'favoriteUsers', 'upvoteUsers', 'downvoteUsers', 'createdAt', 'updatedAt', 'tags', '__v')
                         expect(res.body.url).to.equal('http://google.com')
@@ -101,7 +115,7 @@ describe('ArticleController', () => {
         })
         describe('/article/update', () => {
             it('should update article', async () => {
-                // should validate parameter
+                const updateArticle = sinon.spy(ArticleService, 'updateArticle')
                 const mypost = await Article.findOne({
                     url: 'http://yahoo.co.jp',
                     user: loginUser._id
@@ -115,6 +129,7 @@ describe('ArticleController', () => {
                         tags: TagIds
                     })
                 expect(res).to.have.status(StatusCodes.OK)
+                expect(updateArticle.calledOnce).to.be.true
                 expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'tags', 'upvoteUsers', 'downvoteUsers', 'favoriteUsers', 'createdAt', 'updatedAt')
                 expect(res.body._id).to.equal(mypost._id.toString())
                 expect(res.body.url).to.equal('http://yahoo.co.jp')
@@ -125,6 +140,17 @@ describe('ArticleController', () => {
                 // expect([{ a: 1 }, { a: 2 }]).to.deep.include({ a: 2 })
                 // expect([{ a: 1, b: 2 }, { a: 2, b: 3 }]).to.deep.nested.include({ a: 2, b: 3 })
                 // console.log(res.body.tags)
+            })
+            it('should not update with wrong parameter', async () => {
+                const addedTags = await Tag.insertMany([{ name: 'add1' }, { name: 'add2' }])
+                const TagIds = [tags[0]._id, addedTags[0]._id, addedTags[1]._id]
+                const res = await agent.put('/api/v1/article/update')
+                    .send({
+                        _id: '609f7101f9b7d30546c7fc3d',
+                        description: 'update description',
+                        tags: 'aaa'
+                    })
+                expect(res).to.have.status(StatusCodes.BAD_REQUEST)
             })
             it('should not update with wrong article id', async () => {
                 const addedTags = await Tag.insertMany([{ name: 'add1' }, { name: 'add2' }])
@@ -162,7 +188,7 @@ describe('ArticleController', () => {
         })
         describe('/article/delete', () => {
             it("should delete own article", async () => {
-                // should validate parameter
+                const deleteArticle = sinon.spy(ArticleService, 'deleteArticle')
                 const mypost = await Article.findOne({
                     url: 'http://yahoo.co.jp',
                     user: loginUser._id
@@ -170,6 +196,7 @@ describe('ArticleController', () => {
                 const res = await agent.delete('/api/v1/article/delete')
                     .send({ _id: mypost._id, })
                 expect(res).to.have.status(StatusCodes.OK)
+                expect(deleteArticle.calledOnce).to.be.true
                 expect(res.body).to.have.keys('__v', '_id', 'url', 'description', 'user', 'favoriteUsers', 'upvoteUsers', 'downvoteUsers', 'tags', 'createdAt', 'updatedAt')
                 expect(res.body._id).to.equal(mypost._id.toString())
             })

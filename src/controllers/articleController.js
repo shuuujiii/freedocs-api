@@ -3,9 +3,7 @@ const Article = require('../models/articleModel')
 const User = require('../models/userModel')
 const ArticleService = require('../services/articleService')
 const UserService = require('../services/userService')
-const { AppError } = require('../utils/appError')
 
-const aggregateLimit = (limit) => { return { $limit: limit } }
 const aggregateSort = (sortKey = 'createdAt', order = 'asc') => {
     console.log(sortKey, order)
     return { $sort: { [sortKey]: order === 'asc' ? 1 : -1 } }
@@ -115,43 +113,9 @@ module.exports = {
 
     getRank: async (req, res, next) => {
         try {
-            const recentlyPosted = await Article.aggregate([
-                {
-                    "$project": {
-                        "_id": 1,
-                        "url": 1,
-                        "createdAt": 1,
-                        "updatedAt": 1,
-                    }
-                },
-                aggregateSort('createdAt', 'desc'),
-                { $limit: 3 },
-            ])
-            const likesRanking = await Article.aggregate([
-                {
-                    "$project": {
-                        "_id": 1,
-                        "url": 1,
-                        'count': { $size: "$favoriteUsers" },
-                    }
-                },
-                aggregateSort('count', 'desc'),
-                { $limit: 3 },
-            ])
-            const voteRanking = await Article.aggregate([
-                {
-                    "$project": {
-                        "_id": 1,
-                        "url": 1,
-                        "count": { $subtract: [{ $size: '$upvoteUsers' }, { $size: '$downvoteUsers' }] },
-                        'up': { $size: '$upvoteUsers' },
-                        'down': { $size: '$downvoteUsers' },
-                    }
-                },
-                aggregateSort('count', 'desc'),
-                // aggregateSort('count', -1),
-                { $limit: 3 },
-            ])
+            const recentlyPosted = await ArticleService.getRecentlyPosted()
+            const likesRanking = await ArticleService.getFavoriteRank()
+            const voteRanking = await ArticleService.getVoteRank()
             res.json({
                 recentlyPosted: recentlyPosted,
                 likesRanking: likesRanking,
@@ -164,18 +128,16 @@ module.exports = {
     create: async (req, res, next) => {
         try {
             const { url, tags, description } = req.body
-            const user = await User.findById(req.decoded.user._id)
-            const findArticle = await Article.findOne({ url: url }).lean()
-            if (findArticle) {
-                throw new AppError('AppError', StatusCodes.CONFLICT, 'sorry! this URL already exists', true)
-            }
-            const article = await Article.create({
+            const user = await UserService.findUserById(req.decoded.user._id)
+            await ArticleService.checkDuplicateUrl(url)
+            const payload = {
                 url: url,
                 description: description,
                 tags: tags,
-                user: user._id,
-            })
-            const populated = await Article.findById(article._id).populate('tags')
+                user: user._id.toString(),
+            }
+            const article = await ArticleService.createArticle(payload)
+            const populated = await ArticleService.findArticleByIdWithTags(article._id)
             res.status(StatusCodes.CREATED).json(populated)
         } catch (e) {
             next(e)
@@ -183,23 +145,11 @@ module.exports = {
     },
     update: async (req, res, next) => {
         try {
-            const { _id, url, tags, description } = req.body
-            const user = await User.findById(req.decoded.user._id)
-            const article = await Article.findOneAndUpdate({
-                _id: _id,
-                user: user._id
-            }, {
-                // url: url,
-                description: description,
-                tags: tags
-            }, {
-                new: true,
-            })
-            if (!article) {
-                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
-            }
-            const populated = await Article.findById(article._id)
-                .populate('tags')
+            const { _id, tags, description } = req.body
+            const user = await UserService.findUserById(req.decoded.user._id)
+            const payload = { description: description, tags: tags }
+            const article = await ArticleService.updateArticle({ _id: _id, user: user._id }, payload)
+            const populated = await ArticleService.findArticleByIdWithTags(article._id)
             res.json(populated)
         } catch (e) {
             next(e)
@@ -208,15 +158,9 @@ module.exports = {
     delete: async (req, res, next) => {
         try {
             const { _id } = req.body
-            const article = await Article.findOneAndRemove({
-                _id: _id,
-                user: req.decoded.user._id
-            })
-
-            if (!article) {
-                throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
-            }
-            res.json(article)
+            const user_id = req.decoded.user._id
+            const deletedArticle = await ArticleService.deleteArticle(_id, user_id)
+            res.json(deletedArticle)
         } catch (e) {
             next(e)
         }
