@@ -9,10 +9,6 @@ const Joi = require('joi')
 Joi.objectId = require('joi-objectid')(Joi)
 
 router.get('/lists', articleController.getPosts)
-// router.get('/lists/author/:author',articleController.getAuthor)
-// router.get('/lists/tag/:tagname')
-// router.get('/lists/search/')
-// router.get('/lists/favorite')
 router.get('/ranking', articleController.getRank)
 
 router.post('/create', validateToken, articleController.create)

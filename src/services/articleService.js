@@ -100,16 +100,26 @@ const getVoteRank = async (limit = 3) => {
     ])
 
 }
+
 const createArticle = async (payload) => {
     await validateCreateArticle(payload)
     return await Article.create(payload)
+}
+
+const aggregatePaginate = async (stage, page) => {
+    const pagingOptions = {
+        page: page || 1,
+        limit: 10,
+    };
+
+    return await Article.aggregatePaginate(stage, pagingOptions)
 }
 
 const updateArticle = async (find, payload) => {
     await validateUpdateArticle(payload)
     const article = await Article.findOneAndUpdate(find, payload, { new: true, })
     if (!article) {
-        throw new AppError('AppError', StatusCodes.NO_CONTENT, 'there is no article on this request', true)
+        throw new AppError('AppError', StatusCodes.BAD_REQUEST, 'there is no article on this request', true)
     }
     return article
 }
@@ -133,6 +143,7 @@ module.exports = {
     getRecentlyPosted,
     getFavoriteRank,
     getVoteRank,
+    aggregatePaginate,
     createArticle,
     updateArticle,
     deleteArticle,

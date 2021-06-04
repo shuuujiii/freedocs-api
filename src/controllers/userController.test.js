@@ -140,7 +140,7 @@ describe('/user', () => {
                 .post("/api/v1/user/login")
                 .send({ username: 'aaaaaa', password: 'defaultuser' })
                 .end((err, res) => {
-                    res.should.have.status(StatusCodes.NO_CONTENT);
+                    res.should.have.status(StatusCodes.BAD_REQUEST);
                     done();
                 });
         });
@@ -384,7 +384,7 @@ describe('/user', () => {
                     email: 'test@gmail.xxx',
                 })
                 .end((err, res) => {
-                    res.should.have.status(StatusCodes.NO_CONTENT);
+                    res.should.have.status(StatusCodes.BAD_REQUEST);
                     done();
                 })
         });

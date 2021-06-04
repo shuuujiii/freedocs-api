@@ -161,7 +161,7 @@ describe('ArticleController', () => {
                         description: 'update description',
                         tags: TagIds
                     })
-                expect(res).to.have.status(StatusCodes.NO_CONTENT)
+                expect(res).to.have.status(StatusCodes.BAD_REQUEST)
             })
             it("should not update other user's article", async () => {
                 const otherUser = await User.create({
@@ -183,7 +183,7 @@ describe('ArticleController', () => {
                         description: 'update to other user s description',
                         tags: TagIds
                     })
-                expect(res).to.have.status(StatusCodes.NO_CONTENT)
+                expect(res).to.have.status(StatusCodes.BAD_REQUEST)
             })
         })
         describe('/article/delete', () => {

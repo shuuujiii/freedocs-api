@@ -12,21 +12,21 @@ const { StatusCodes, getReasonPhrase } = require('http-status-codes');
 const findUserById = async (id) => {
     const user = await User.findById(id)
     if (!user) {
-        throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user not found', true)
+        throw new AppError('AppError', StatusCodes.BAD_REQUEST, 'user not found', true)
     }
     return user
 }
 const findUserByUsername = async (username) => {
     const user = await User.findOne({ username: username })
     if (user === null) {
-        throw new AppError('AppError', StatusCodes.NO_CONTENT, 'user is not found', true)
+        throw new AppError('AppError', StatusCodes.BAD_REQUEST, 'user is not found', true)
     }
     return user
 }
 const findUserWithAuthEmail = async (email) => {
     const user = await User.findOne({ email: email, authEmail: true })
     if (user === null) {
-        throw new AppError('AppError', StatusCodes.NO_CONTENT, 'email is not found or authorized', true)
+        throw new AppError('AppError', StatusCodes.BAD_REQUEST, 'email is not found or authorized', true)
     }
     return user
 }

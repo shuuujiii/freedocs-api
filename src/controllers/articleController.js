@@ -4,107 +4,108 @@ const User = require('../models/userModel')
 const ArticleService = require('../services/articleService')
 const UserService = require('../services/userService')
 
-const aggregateSort = (sortKey = 'createdAt', order = 'asc') => {
-    console.log(sortKey, order)
+const getPipeSort = (sortKey = 'createdAt', order = 'asc') => {
     return { $sort: { [sortKey]: order === 'asc' ? 1 : -1 } }
 }
-const regexSearch = (search) => {
-    if (!search) { return [] }
+const getPipesSearch = (search) => {
     let regex = new RegExp(search, 'i');
-    return [{
+    return search ? [{
         $match: {
             $or: [
                 { "tags.name": { "$all": [regex] } },
                 { "url": regex },
             ]
         }
+    }] : []
+}
+const getPipesUserFavorite = async (username) => {
+    if (!username) return []
+    const user = await UserService.findUserByUsername(username)
+    return [{
+        $match: {
+            'favoriteUsers': { $in: [user._id] }
+        }
     }]
 }
-const searchTag = (name) => {
-    if (!name) { return [] }
-    return [{ $match: { 'tags.name': { $in: [name] } } }]
-}
-const searchUserFavorite = async (username) => {
-    if (username) {
-        user = await User.findOne({ 'username': username })
-        return [{
-            $match: {
-                'favoriteUsers': { $in: [user._id] }
-            }
-        }]
+
+const getPipesTag = (name) => {
+    const stage = [{
+        $lookup: {
+            from: 'tags',
+            localField: "tags",
+            foreignField: "_id",
+            as: "tags"
+        }
+    }]
+
+    if (name) {
+        stage.push({ $match: { 'tags.name': { $in: [name] } } })
     }
-    return []
-}
-const searchAuthor = async (author) => {
-    if (author) {
-        user = await User.findOne({ 'username': author })
-        return [{
-            $match: {
-                "user": user._id
-            }
-        }]
-    }
-    return []
+    return stage
 }
 
+const getPipesUser = (username) => {
+    const stage = [
+        {
+            $lookup: {
+                from: 'users',
+                localField: "user",
+                foreignField: "_id",
+                as: "author"
+            }
+        },
+        { $unwind: '$author' },
+    ]
+    if (username) {
+        stage.push({
+            $match: {
+                $expr: {
+                    $eq: [
+                        '$author.username',
+                        username,
+                    ]
+                }
+            }
+        })
+    }
+
+    return stage
+}
+
+const getPipeProject = () => ({
+    $project: {
+        _id: 1,
+        tags: 1,
+        url: 1,
+        description: 1,
+        favoriteUsers: 1,
+        upvoteUsers: 1,
+        downvoteUsers: 1,
+        user: 1,
+        author: "$author.username",
+        favorite: { $size: '$favoriteUsers' },
+        vote: { $subtract: [{ $size: '$upvoteUsers' }, { $size: '$downvoteUsers' }] },
+        createdAt: 1,
+        updatedAt: 1,
+    }
+})
 module.exports = {
     getPosts: async (req, res, next) => {
         try {
             const { page, sortKey, order, search, tag, author, favorite, } = req.query
-            const pagingOptions = {
-                page: page || 1,
-                limit: 10,
-            };
-            const lookupTag = {
-                $lookup: {
-                    from: 'tags',
-                    localField: "tags",
-                    foreignField: "_id",
-                    as: "tags"
-                }
-            }
-            const lookupAuthor = [
-                {
-                    $lookup: {
-                        from: 'users',
-                        localField: "user",
-                        foreignField: "_id",
-                        as: "author"
-                    }
-                },
-                { $unwind: '$author' }
+            const pipesLookupTag = getPipesTag(tag)
+            const pipesLookupAuthor = getPipesUser(author)
+            const pipesSearch = getPipesSearch(search)
+            const pipesUserFavorite = await getPipesUserFavorite(favorite)
+            const stage = [
+                ...pipesLookupTag,
+                ...pipesLookupAuthor,
+                ...pipesSearch,
+                ...pipesUserFavorite,
+                getPipeProject(),
+                getPipeSort(sortKey, order),
             ]
-            const pipSearch = regexSearch(search)
-            const pipSearchTag = searchTag(tag)
-            const pipSearchUserFavorite = await searchUserFavorite(favorite)
-            const pipSearchAuthor = await searchAuthor(author)
-            const articleAggregate = Article.aggregate([
-                lookupTag,
-                ...lookupAuthor,
-                ...pipSearch,
-                ...pipSearchTag,
-                ...pipSearchUserFavorite,
-                ...pipSearchAuthor,
-                {
-                    $project: {
-                        _id: 1,
-                        tags: 1,
-                        url: 1,
-                        description: 1,
-                        favoriteUsers: 1,
-                        upvoteUsers: 1,
-                        downvoteUsers: 1,
-                        user: 1,
-                        author: "$author.username",
-                        favorite: { $size: "$favoriteUsers" },
-                        vote: { $subtract: [{ $size: '$upvoteUsers' }, { $size: '$downvoteUsers' }] },
-                        createdAt: 1,
-                        updatedAt: 1,
-                    }
-                },
-                aggregateSort(sortKey, order),
-            ])
-            const paginated = await Article.aggregatePaginate(articleAggregate, pagingOptions)
+            const paginated = await ArticleService.aggregatePaginate(Article.aggregate(stage), page)
             res.json(paginated)
         } catch (e) {
             next(e)

@@ -1,0 +1,15 @@
+GET http://localhost:5000/api/v1/article/lists/author/nabeshi
+
+
+###
+
+GET http://localhost:5000/api/v1/article/lists/favorite/user/testuser
+
+### 
+GET http://localhost:5000/api/v1/article/lists/tag/upvote
+
+###
+
+GET http://localhost:5000/api/v1/article/lists
+
+###
