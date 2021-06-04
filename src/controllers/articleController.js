@@ -14,6 +14,7 @@ const getPipesSearch = (search) => {
             $or: [
                 { "tags.name": { "$all": [regex] } },
                 { "url": regex },
+                { "description": regex },
             ]
         }
     }] : []

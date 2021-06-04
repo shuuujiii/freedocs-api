@@ -18,12 +18,13 @@ const defaultUser = {
     authEmail: true
 }
 let tags
+let user
 describe('ArticleController', () => {
     beforeEach(async () => { //Before each test we empty the database
         await User.deleteMany({})
         await Article.deleteMany({})
         await Tag.deleteMany({})
-        await User.create({
+        user = await User.create({
             username: defaultUser.username,
             password: bc.hashPassword(defaultUser.password),
             email: defaultUser.email,
@@ -44,6 +45,86 @@ describe('ArticleController', () => {
                     expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
                     done();
                 });
+        })
+        it('should return articles filtered by tagname', async () => {
+            const otherUser = await User.create({ username: 'other', email: '', password: 'otheruser' })
+            const articles = await Article.insertMany([
+                { url: 'http:/tag', tags: [tags[0]._id], user: user._id },
+                { url: 'http://withothertag', tags: [tags[0]._id, tags[1]._id], user: user._id },
+                { url: 'http://othertag', tags: [tags[1]._id], user: user._id },
+                { url: 'http://notag', tags: [], user: user._id },
+                { url: 'http://othetag', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://othetag2', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://otherwithothertag', tags: [tags[0]._id, tags[1]._id], user: otherUser._id },
+                { url: 'http://otherothertag', tags: [tags[1]._id], user: otherUser._id },
+                { url: 'http://othernotag', tags: [], user: otherUser._id },
+            ]
+            )
+            const res = await chai.request(app)
+                .get("/api/v1/article/lists?tag=tag1")
+            res.should.have.status(StatusCodes.OK);
+            expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
+            expect(res.body.docs).to.have.length(5)
+        })
+        it('should return articles filtered by author', async () => {
+            const otherUser = await User.create({ username: 'other', email: '', password: 'otheruser' })
+            await Article.insertMany([
+                { url: 'http:/tag', tags: [tags[0]._id], user: user._id },
+                { url: 'http://withothertag', tags: [tags[0]._id, tags[1]._id], user: user._id },
+                { url: 'http://othertag', tags: [tags[1]._id], user: user._id },
+                { url: 'http://notag', tags: [], user: user._id },
+                { url: 'http://othetag', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://othetag2', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://othetag3', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://otherwithothertag', tags: [tags[0]._id, tags[1]._id], user: otherUser._id },
+                { url: 'http://otherothertag', tags: [tags[1]._id], user: otherUser._id },
+                { url: 'http://othernotag', tags: [], user: otherUser._id },
+            ]
+            )
+            const res = await chai.request(app)
+                .get("/api/v1/article/lists?author=other")
+            res.should.have.status(StatusCodes.OK);
+            expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
+            expect(res.body.docs).to.have.length(6)
+        })
+        it('should return articles filtered by favorite', async () => {
+            const otherUser = await User.create({ username: 'other', email: '', password: 'otheruser' })
+            await Article.insertMany([
+                { url: 'http://own', tags: [tags[0]._id], user: user._id, favoriteUsers: [user._id] },
+                { url: 'http://two', tags: [tags[0]._id, tags[1]._id], user: user._id, favoriteUsers: [user._id, otherUser._id] },
+                { url: 'http://otherUserOnly', tags: [tags[1]._id], user: user._id, favoriteUsers: [otherUser._id] },
+                { url: 'http://nofavorite', tags: [], user: user._id, favoriteUsers: [] },
+                { url: 'http://othersarticle', tags: [tags[0]._id], user: otherUser._id, favoriteUsers: [user._id] },
+                { url: 'http://withOthers', tags: [tags[0]._id, tags[1]._id], user: otherUser._id, favoriteUsers: [user._id, otherUser._id] },
+                { url: 'http://otherUserOnly', tags: [tags[1]._id], user: user._id, favoriteUsers: [otherUser._id] },
+                { url: 'http://othernofavorite', tags: [], user: otherUser._id },
+            ]
+            )
+            const res = await chai.request(app)
+                .get("/api/v1/article/lists?favorite=defaultuser")
+            res.should.have.status(StatusCodes.OK);
+            expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
+            expect(res.body.docs).to.have.length(4)
+        })
+        it('should return articles filtered by search word', async () => {
+            const otherUser = await User.create({ username: 'other', email: '', password: 'otheruser' })
+            await Article.insertMany([
+                { url: 'http://myarticletag', tags: [tags[0]._id], user: user._id },
+                { url: 'http://tag1', tags: [], user: user._id, },
+                { url: 'http://myarticledescription', tags: [], user: user._id, description: 'tag1' },
+                { url: 'http://twotag', tags: [tags[0]._id, tags[1]._id], user: user._id },
+                { url: 'http://othermyarticletag', tags: [tags[0]._id], user: otherUser._id },
+                { url: 'http://othertag1', tags: [], user: otherUser._id, },
+                { url: 'http://othermyarticledescription', tags: [], user: otherUser._id, description: 'tag1' },
+                { url: 'http://othertwotag', tags: [tags[0]._id, tags[1]._id], user: otherUser._id },
+                { url: 'http://empty', tags: [], user: otherUser._id },
+            ]
+            )
+            const res = await chai.request(app)
+                .get("/api/v1/article/lists?search=tag1")
+            res.should.have.status(StatusCodes.OK);
+            expect(res.body).to.have.contain.keys('docs', 'totalDocs', 'limit', 'page', 'totalPages', 'pagingCounter', 'hasPrevPage', 'hasNextPage', 'prevPage', 'nextPage')
+            expect(res.body.docs).to.have.length(8)
         })
     })
     describe('/article/ranking', () => {
